@@ -1,0 +1,29 @@
+# Ignores that travel with the repo: they are committed, so they should describe
+# the project rather than one machine. Personal, always-on ignores (.DS_Store,
+# .env, editor directories) belong in .git/info/exclude instead, which is not
+# committed.
+
+# Output of the Playwright MCP browser: page snapshots, screenshots and console
+# logs left behind while reviewing a change. Remove this rule in a repo that
+# needs to track those artifacts.
+.playwright-mcp/
+
+# Dependencies and engine caches
+node_modules/
+.godot/
+__pycache__/
+
+# Generated output: every project renders into these; finished videos live in media/
+previews/
+renders/
+*.blend
+*.blend1
+*.log
+
+# Baked choreography: regenerate with `python3 choreo.py bake`
+projects/warrior-dragon/bake.json
+projects/warrior-dragon/motion-canvas/src/bake.json
+
+# Revideo / Vite build output
+dist/
+output/
