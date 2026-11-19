@@ -22,6 +22,7 @@ renders/
 
 # Baked choreography: regenerate with `python3 choreo.py bake`
 projects/warrior-dragon/bake.json
+projects/warrior-dragon/godot/bake.json
 projects/warrior-dragon/motion-canvas/src/bake.json
 
 # Revideo / Vite build output
