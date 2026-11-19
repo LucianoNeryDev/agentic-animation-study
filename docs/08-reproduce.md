@@ -42,7 +42,7 @@ Each project's `BRIEF.md` has its full command list. The short version:
 | `showcase/threejs` | `npx vite --port 5173 &` then `node capture.mjs --out renders/frames` |
 | `showcase/motion-canvas` | `DISABLE_TELEMETRY=true npx tsx src/render.ts --out renders/loop.mp4`; `../finish.sh` re-measures Blender's cost into the chart |
 | `showcase-2d` | `python3 fight.py json`, then see its `BRIEF.md` for Grease Pencil, Motion Canvas and Godot |
-| `warrior-dragon` | `python3 choreo.py bake && cp bake.json motion-canvas/src/`, then render `godot/` and `motion-canvas/` per its `BRIEF.md` |
+| `warrior-dragon` | `python3 choreo.py bake && cp bake.json motion-canvas/src/ && cp bake.json godot/`, then render `godot/` and `motion-canvas/` per its `BRIEF.md` |
 
 Encode frame sequences with:
 

@@ -41,11 +41,11 @@ Assumptions: silent; 60 fps for both; dusk setting; the warrior wins.
 ## Files and render commands
 
 - `choreo.py`: poses, keys, events, camera and wind; the warrior and dragon rigs; the cape and plume simulation; the bake. `python3 choreo.py preview <seconds>...` draws a quick PIL sheet for tuning before any engine runs.
-- `bake.json`: every frame's shapes, camera, health values and events (5.3 MB). Godot reads it through a symlink; Motion Canvas imports a copy in `src/`.
+- `bake.json`: every frame's shapes, camera, health values and events (5.3 MB). It is generated, not committed: `python3 choreo.py bake` writes it, and Godot and Motion Canvas each read a copy (`godot/bake.json`, `motion-canvas/src/bake.json`), copied by the command below.
 - `godot/main.gd`: the game version. `motion-canvas/src/scenes/fight.tsx`: the illustration version.
 
 ```bash
-python3 choreo.py bake && cp bake.json motion-canvas/src/
+python3 choreo.py bake && cp bake.json motion-canvas/src/ && cp bake.json godot/
 # Godot (about 5 min on the test machine; most of it is PNG writing; prefix with xvfb-run -a when headless)
 cd godot && godot --path . --write-movie renders/frames/f.png --fixed-fps 60 --quit-after 1200 \
   && ffmpeg -y -framerate 60 -start_number 0 -i renders/frames/f%08d.png -c:v libx264 -pix_fmt yuv420p -crf 18 \

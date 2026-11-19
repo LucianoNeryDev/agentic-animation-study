@@ -45,6 +45,8 @@ Which frameworks let an AI coding agent make animation on its own, and how shoul
 7. [Gotchas](docs/07-gotchas.md): every trap hit during the study, with the fix.
 8. [Reproducing the study](docs/08-reproduce.md): set up the tools and re-render any project.
 
+To contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Quick start
 
 Re-render the final study (Python 3, Node 20+, ffmpeg, Godot 4.7; full setup in [docs/08](docs/08-reproduce.md)):
@@ -52,7 +54,7 @@ Re-render the final study (Python 3, Node 20+, ffmpeg, Godot 4.7; full setup in 
 ```bash
 cd projects/warrior-dragon
 python3 choreo.py bake                       # writes bake.json: every frame's shapes
-cp bake.json motion-canvas/src/
+cp bake.json motion-canvas/src/ && cp bake.json godot/
 (cd motion-canvas && npm ci && DISABLE_TELEMETRY=true npx tsx src/render.ts --out renders/full.mp4)
 (cd godot && godot --path . --write-movie renders/frames/f.png --fixed-fps 60 --quit-after 1200)
 ```
