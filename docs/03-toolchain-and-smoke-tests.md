@@ -12,6 +12,7 @@ The route guides were first written from documentation. Then every tool was inst
 | Node.js / npm | 26.8.1 / 11.19.0 | |
 | three | 0.186.1 (r186) | npm, per project |
 | Revideo | 0.11.0 | npm, per project (template copied, see below) |
+| HyperFrames | 0.9.98 (with GSAP 3.15.0 and its own `chrome-headless-shell` 158) | npm, per project, written by hand rather than `hyperframes init` (see below) |
 | Playwright | 1.64.1 | npm, per project, plus `npx playwright install chromium` |
 | Python | 3.13 | System (Blender scripts run in Blender's bundled Python) |
 
@@ -67,3 +68,19 @@ What the test changed in the guide (the most of any route):
 - Set `DISABLE_TELEMETRY=true` for every render.
 
 The final step of the smoke test was to run the setup again, word for word from the guide, in an empty folder. It rendered the same.
+
+## HyperFrames
+
+![HyperFrames smoke test](images/smoke-hyperframes-sheet.jpg)
+
+Added with the fifth route ([ADR 0005](adr/0005-hyperframes-fifth-route.md)). The same scene as the Motion Canvas smoke test, a ball, a line and a title, written as HTML and SVG with a GSAP timeline: 48 frames over 1.6 s at 30 fps, and a 0.9–1.6 s range of 21 frames, the same counts as Revideo. The sheet above is that range as a PNG sequence, frames 27–47. A full render took 15 s, almost all of it startup.
+
+What the test changed in the guide:
+
+- **`hyperframes init` is not the setup.** It prompts, offers to install HeyGen's agent skills, writes `AGENTS.md` and `CLAUDE.md` into the project, loads GSAP from a CDN and pins `npx --yes` in its scripts. The route writes `package.json`, `hyperframes.json` and `meta.json` by hand, with `hyperframes` and `gsap` pinned as local dev dependencies.
+- **Telemetry is on by default.** Every command runs with `HYPERFRAMES_NO_TELEMETRY=1`.
+- **`check` caught the guide's own bug.** The first example scaled the ball after moving it by its `cx` attribute. GSAP had fixed the transform origin at the old position, so the ball grew 168 px off the right edge; `check` reported the overflow before anything rendered. The example now grows the radius.
+- **PNG sequences drop the page background.** They are RGBA and leave out the `body` background that the MP4 keeps, so the first contact sheet came out on white. The background now goes on the composition root.
+- **PNG files are numbered from 1**, whatever `--start` is; the tile command reads them with `-start_number 1` and labels them with the range's real frame numbers.
+
+The final step was again to run the setup from the guide, word for word, in an empty folder. Its MP4 decoded to the same frames, byte for byte, as the smoke project's.

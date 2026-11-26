@@ -15,7 +15,7 @@ Features, image quality and community size come after these four. A beautiful to
 
 ## Candidates
 
-The starting list was Blender, Godot, Three.js, Babylon.js, Panda3D, Bevy, Motion Canvas, Glaxnimate, StykAnimate and Stykz. Research added Revideo, Remotion and Manim (as Motion Canvas alternatives) and, for 2D, Synfig, Spine, Rive, Moho, OpenToonz, Toon Boom and Aseprite. HyperFrames was tested later, in November 2026 ([docs/09](09-hyperframes.md)).
+The starting list was Blender, Godot, Three.js, Babylon.js, Panda3D, Bevy, Motion Canvas, Glaxnimate, StykAnimate and Stykz. Research added Revideo, Remotion and Manim (as Motion Canvas alternatives) and, for 2D, Synfig, Spine, Rive, Moho, OpenToonz, Toon Boom and Aseprite. HyperFrames was tested later, in November 2026, and kept as a fifth route ([docs/09](09-hyperframes.md)).
 
 | Framework | Language | Verdict | Why |
 | --- | --- | --- | --- |
@@ -29,7 +29,7 @@ The starting list was Blender, Godot, Three.js, Babylon.js, Panda3D, Bevy, Motio
 | Glaxnimate | Python | Rejected | A KDE vector animator with a Python module and Lottie/SVG export. Useful for app and web animation assets, but niche, thinly documented, and the PyPI package looked old (0.5.4, September 2023). |
 | Stykz | GUI | Rejected | Freeware stick-figure animator modelled on Pivot, unmaintained since about 2011, with no scripting and a proprietary file format. |
 | StykAnimate | GUI (Electron + WebGPU) | Rejected for now | See below. |
-| HyperFrames | HTML / CSS / JS (GSAP) | **Tested, recommended as a fifth route** | Meets all four requirements and ships its own checking tools (`check`, `snapshot` contact sheets). About twice Revideo's render cost here, and its MP4 output is reproducible to the eye but not byte for byte. Apache-2.0, very active, pre-1.0. Not in the skill until an ADR records the decision ([docs/09](09-hyperframes.md)). |
+| **HyperFrames** | HTML / CSS / JS (GSAP) | **Kept, added later** | Web-native 2D: HTML and CSS layout and type, UI, real footage, captions. Seeks a paused GSAP timeline in headless Chrome, so any frame renders alone, and ships its own checks (`check`, `snapshot` contact sheets). Costs 2–2.5 times Revideo per frame, and frames match to the eye but not always byte for byte. Apache-2.0, very active, pre-1.0. Tested through every round of the study ([docs/09](09-hyperframes.md), [ADR 0005](adr/0005-hyperframes-fifth-route.md)). |
 | Remotion | React | Not chosen | Excellent headless CLI, but a company licence is required once a company passes a few people, and it overlaps Motion Canvas. |
 | Manim | Python | Not chosen | CLI-first and strong for maths animation; overlaps Motion Canvas for general 2D. |
 | Synfig | XML / CLI | Not chosen | Open source with a text format and a renderer that runs without a display, but the stable release was still 1.4.5 (May 2024) with 1.5.x only as previews, and it overlaps Motion Canvas. |
@@ -54,7 +54,7 @@ That left three ways to include it: a hand-off route (the agent writes a Pivot f
 
 ## The result
 
-Four routes, recorded in [ADR 0001](adr/0001-four-routes.md):
+Four routes, recorded in [ADR 0001](adr/0001-four-routes.md), then a fifth:
 
 | Route | Pick it for |
 | --- | --- |
@@ -63,3 +63,4 @@ Four routes, recorded in [ADR 0001](adr/0001-four-routes.md):
 | Three.js | 3D shown on the web or interactive in a browser, or quick stylised 3D renders |
 | Motion Canvas | Programmed 2D video: motion graphics, explainers, diagrams, text and data, flat or stick-figure characters |
 | Blender Grease Pencil | Hand-drawn 2D, added after the 2D study ([ADR 0003](adr/0003-2d-without-a-new-framework.md)) |
+| HyperFrames | Web-native 2D video: UI and product videos, kinetic type and captions, footage edits, broadcast-style overlays. Added in November 2026 ([ADR 0005](adr/0005-hyperframes-fifth-route.md)) |

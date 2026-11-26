@@ -1,6 +1,6 @@
 # 7. Gotchas
 
-Every trap hit during the study, with the fix that worked. Versions: Blender 5.2.2, Godot 4.7.2, three r186, Revideo 0.11.0, Playwright 1.64.1, ffmpeg 7.1.5, npm 11.
+Every trap hit during the study, with the fix that worked. Versions: Blender 5.2.2, Godot 4.7.2, three r186, Revideo 0.11.0, HyperFrames 0.9.98 (GSAP 3.15.0), Playwright 1.64.1, ffmpeg 7.1.5, npm 11.
 
 ## Blender
 
@@ -47,6 +47,23 @@ Every trap hit during the study, with the fix that worked. Versions: Blender 5.2
 - **Coordinates** are pixels with the origin at the canvas centre; visible space is ±width/2 and ±height/2. Leave room for overshooting easings.
 - **Revideo has no `Camera` node** (Motion Canvas does). Wrap the scene in a `Node` and animate its position and scale.
 - **Large JSON imports work:** the 5 MB `bake.json` imports directly through Vite.
+
+## HyperFrames
+
+- **`hyperframes init` changes more than the project.** It prompts, offers to install HeyGen's agent skills, writes `AGENTS.md` and `CLAUDE.md`, loads GSAP from a CDN and pins `npx --yes` in its scripts. Write `package.json`, `hyperframes.json` and `meta.json` by hand, with `hyperframes` and `gsap` as pinned dev dependencies.
+- **Telemetry is on by default:** `HYPERFRAMES_NO_TELEMETRY=1` (or `DO_NOT_TRACK=1`) on every command.
+- **One render per user account at a time.** Others queue silently, so a wall-clock time can include minutes of waiting; HyperFrames' own "rendered in" line leaves the wait out.
+- **About 12 s of startup per command** (CLI, pre-render lint, Chrome launch). A 1-second preview takes about 20 s; `snapshot` is the cheap way to look.
+- **PNG sequences are RGBA without the page background.** Paint the background on the composition root, not `body`. Their files are numbered from `frame_000001` whatever `--start` is.
+- **MP4 frames are not byte-identical between runs.** The MP4 path captures JPEGs through Chrome's BeginFrame and drifts by a few levels around moving anti-aliased edges; compare PNG sequences instead. Animated per-letter captions drifted even as PNGs (invisible); the same range without them was byte-identical.
+- **GSAP fixes an SVG element's transform origin when it is set.** Move it later by `cx`/`x` attributes and a `scale` pivots around the old spot: in the smoke test the ball grew 168 px off-screen. Scale by `r` or `width`, or move with GSAP's `x`/`y`.
+- **Measure text inside the update that uses it.** A frame can be seeked before a font has loaded, so a width measured once at load can be stale.
+- **Give later elements an explicit start state.** A render that starts mid-clip seeks straight there; `check` flags elements hidden only in a tween's from-values, and measuring the DOM (`getBoundingClientRect`) inside an `onUpdate`.
+- **`background-clip: text` on a word does not reach letter spans with their own transforms.** Put the gradient on each letter.
+- **Footage must live inside the project** (a symlink works; `../` fails `check`), every clip is decoded to JPEG frames before capture even for a short range, and an active clip's opacity is forced to 1, so fade its wrapper.
+- **A symlinked `node_modules` is not served:** GSAP returns 404 and the render fails. Install per project.
+- **Chrome's software canvas:** drawing a scaled image costs about ten times an unscaled one; draw scenery as paths or cache it at its final size.
+- **`check` enforces craft rules,** such as reading time per caption (about 0.5 s + 0.3 s a word, 2 s for a closing line), a 28 px text floor and contrast. They are warnings; keep the ones the brief justifies.
 
 ## ffmpeg and the Look step
 

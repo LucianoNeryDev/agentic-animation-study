@@ -2,22 +2,22 @@
 
 | Field | Value |
 | --- | --- |
-| Purpose | A short 2D action clip, made twice from the same choreography to show the Godot 2D and Motion Canvas routes |
+| Purpose | A short 2D action clip, made from the same choreography in Godot 2D and Motion Canvas, and later in HyperFrames ([`hyperframes/BRIEF.md`](hyperframes/BRIEF.md)) |
 | Subject and action | A stick-figure warrior (helmet with plume, sword, round shield, cape) faces a dragon that lands, roars and breathes fire; the warrior blocks, slashes, is knocked down, dodges a fire blast and finishes the dragon with a plunging strike |
-| Dimension and look | 2D. Godot: game look (HUD with health and boss bars, particles, glow, parallax dusk landscape). Motion Canvas: flat vector illustration with title cards |
+| Dimension and look | 2D. Godot: game look (HUD with health and boss bars, particles, glow, parallax dusk landscape). Motion Canvas: flat vector illustration with title cards. HyperFrames: shadow puppets on a lamp-lit paper screen with storybook captions |
 | Length | 20 s (1200 frames) |
 | Aspect, resolution, fps | 16:9, 1920×1080, 60 fps |
 | Camera | Baked camera path shared by both versions: follows the action, shakes on impacts, zooms in on the finishing blow and the victory |
 | Sound | Silent (assumption) |
 | Assets | None; everything is built from primitives |
-| Deliverable | Two H.264 MP4s plus a side-by-side comparison |
+| Deliverable | One H.264 MP4 per route plus a side-by-side comparison (`media/warrior-dragon-compare.mp4`) |
 
 Assumptions: silent; 60 fps for both; dusk setting; the warrior wins.
 
 ## Route and methods
 
 - **Godot 2D** for the game-feel version and **Motion Canvas (Revideo)** for the vector version, as asked.
-- **Choreography baked to data:** `choreo.py` holds poses, timed keys, events and the camera, evaluates them, and writes every frame's shapes to `bake.json`. Both routes only draw those shapes, so they match frame for frame.
+- **Choreography baked to data:** `choreo.py` holds poses, timed keys, events and the camera, evaluates them, and writes every frame's shapes to `bake.json`. Every route only draws those shapes, so they match frame for frame.
 - **Methods:** keyframed poses with two-bone IK (warrior limbs, dragon legs); procedural rigs (dragon spine, tail, neck curve, wings from a spread and flap value); Verlet simulation for the cape and plume (secondary motion); hit-stop as frozen action time; seeded camera shake; particles for fire, sparks, dust and embers in each route.
 
 ## Beat sheet
