@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-11-26
 
 - HyperFrames added as a fifth route ([ADR 0005](docs/adr/0005-hyperframes-fifth-route.md)): a route guide in the skill, chosen for web-native 2D video.
 - HyperFrames taken through every round: smoke test, a showcase scene ("Reel"), the shared 2D stick fight (as a TV sports replay), Warrior vs Dragon (as a shadow-puppet storybook), and a beat-for-beat port of the Motion Canvas showcase raced against Revideo ([docs/09](docs/09-hyperframes.md)).
