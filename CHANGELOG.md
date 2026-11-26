@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- HyperFrames tested as a candidate route: the Motion Canvas showcase ported to HTML and GSAP, render cost and determinism measured against Revideo, and a side-by-side video ([docs/09](docs/09-hyperframes.md)).
+
 ## 1.0.0 — 2026-10-20
 
 First publication of the study.

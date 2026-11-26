@@ -10,6 +10,7 @@
 
 # Dependencies and engine caches
 node_modules/
+.hyperframes/
 .godot/
 __pycache__/
 

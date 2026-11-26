@@ -12,7 +12,8 @@ Which frameworks let an AI coding agent make animation on its own, and how shoul
 - **What matters is control, not features.** An agent needs plain-text scenes, a headless render, frames that come out the same every time, and single frames it can render and inspect. Tools that only export through a GUI, such as StykAnimate and Stykz, were rejected however good their output.
 - **The agent only sees animation through frames it renders and opens.** The skill's core step, *Look*, renders stills and numbered contact sheets for every beat and checks them against a timed beat sheet. In this study that step caught an off-screen ball, fire aimed at the ground, a leap through a dragon's head, wings standing up like sails, a full-screen glow haze and a victory squeezed into the last frames. [The skill](docs/02-animation-skill.md).
 - **Bake the choreography once, draw it anywhere.** For the final study, one Python file evaluates poses, IK, cloth simulation, hit-stops and the camera, then writes every frame's shapes to JSON. Godot and Motion Canvas only draw them, so both versions match frame for frame. [How](docs/06-warrior-vs-dragon.md).
-- **Render cost spans more than three orders of magnitude** at 1080p on a GTX 745: Cycles ≈ 40 s per frame, Grease Pencil ≈ 2.3 s, Godot Movie Maker ≈ 0.25–0.33 s, Three.js capture ≈ 0.08 s, Revideo ≈ 0.024–0.04 s.
+- **HyperFrames passes the agent test.** HTML and GSAP scenes, a headless render, and built-in frame checks; a beat-for-beat port of the Motion Canvas showcase rendered at about half Revideo's speed, with MP4 frames that match to the eye but not byte for byte. Recommended as a fifth route for web-native 2D video. [The test](docs/09-hyperframes.md).
+- **Render cost spans more than three orders of magnitude** at 1080p on a GTX 745: Cycles ≈ 40 s per frame, Grease Pencil ≈ 2.3 s, Godot Movie Maker ≈ 0.25–0.33 s, Three.js capture ≈ 0.08 s, Revideo ≈ 0.024–0.04 s, HyperFrames ≈ 0.05 s.
 
 ## The showcases
 
@@ -20,6 +21,7 @@ Which frameworks let an AI coding agent make animation on its own, and how shoul
 | --- | --- | --- |
 | **Four routes**: one scene per framework, chosen to show what each does best | [Blender: Collapse](media/showcase-blender-collapse.mp4) · [Godot: Arena](media/showcase-godot-arena.mp4) · [Three.js: Field](media/showcase-threejs-field.mp4) · [Motion Canvas: Loop](media/showcase-motion-canvas-loop.mp4) | [docs/04](docs/04-four-route-showcase.md) |
 | **2D routes**: the same stick-figure fight in three 2D styles | [Grease Pencil](media/2d-fight-grease-pencil.mp4) · [Motion Canvas](media/2d-fight-motion-canvas.mp4) · [Godot 2D](media/2d-fight-godot.mp4) · [side by side](media/2d-fight-compare.mp4) | [docs/05](docs/05-2d-routes.md) |
+| **HyperFrames port**: the Motion Canvas showcase rebuilt in HTML and GSAP, to test a fifth route | [HyperFrames: Loop](media/showcase-hyperframes-loop.mp4) · [side by side with Motion Canvas](media/showcase-loop-compare.mp4) | [docs/09](docs/09-hyperframes.md) |
 | **Warrior vs Dragon**: a 20-second fight, game look and illustration look | [Godot 2D](media/warrior-dragon-godot.mp4) · [Motion Canvas](media/warrior-dragon-motion-canvas.mp4) | [docs/06](docs/06-warrior-vs-dragon.md) |
 
 [![The four-route showcase: Blender, Godot, Three.js, Motion Canvas](docs/images/showcase-four-routes.jpg)](docs/04-four-route-showcase.md)
@@ -44,6 +46,7 @@ Which frameworks let an AI coding agent make animation on its own, and how shoul
 6. [Warrior vs Dragon](docs/06-warrior-vs-dragon.md): rigs, baked choreography, the two looks and the fixes.
 7. [Gotchas](docs/07-gotchas.md): every trap hit during the study, with the fix.
 8. [Reproducing the study](docs/08-reproduce.md): set up the tools and re-render any project.
+9. [HyperFrames](docs/09-hyperframes.md): the HTML-to-video framework tested against the Motion Canvas route, with render cost and determinism measured.
 
 To contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
