@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Four engines, one loop</title>
+    <script src="node_modules/gsap/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Noto Sans"; font-weight: 400; src: url("assets/fonts/NotoSans-Regular.ttf"); }
+      @font-face { font-family: "Noto Sans"; font-weight: 700; src: url("assets/fonts/NotoSans-Bold.ttf"); }
+      @font-face { font-family: "Noto Sans"; font-weight: 800; src: url("assets/fonts/NotoSans-ExtraBold.ttf"); }
+      :root { --ground: #0f1117; --ink: #f2f2f2; --muted: #8b93a7; --gold: #ffd34d; --pink: #ff5d8f; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      #root { width: 100%; height: 100%; }
+      svg { display: block; font-family: "Noto Sans", sans-serif; }
+      text { dominant-baseline: central; text-anchor: middle; }
+      .w7 { font-weight: 700; } .w8 { font-weight: 800; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="10.72"
+         data-fps="60" data-width="1920" data-height="1080">
+      <!-- Same coordinates as the Motion Canvas scene: origin at the centre, y down. -->
+      <svg id="stage" class="clip" data-start="0" data-duration="10.72" data-track-index="0"
+           width="1920" height="1080" viewBox="-960 -540 1920 1080">
+        <defs>
+          <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse" x="0" y="0">
+            <path d="M60 0H0V60" fill="none" stroke="#ffffff0b" stroke-width="4" />
+          </pattern>
+        </defs>
+        <rect x="-960" y="-540" width="1920" height="1080" fill="url(#grid)" />
+
+        <!-- A: title -->
+        <g id="titleGroup">
+          <text id="title" class="w8" y="-40" font-size="112" fill="var(--ink)" style="text-anchor: start"></text>
+          <line id="underline" y1="50" y2="50" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" opacity="0" />
+        </g>
+        <g id="roster" transform="translate(0 150)"></g>
+
+        <!-- B: the loop -->
+        <g id="diagram">
+          <g id="arrows"></g>
+          <path id="ret" d="M0 58 L0 134 Q0 170 -36 170 L-324 170 Q-360 170 -360 134 L-360 66"
+                fill="none" stroke="var(--pink)" stroke-width="6" stroke-linecap="round" />
+          <text id="fixLabel" class="w7" x="-180" y="214" font-size="40" fill="var(--pink)" opacity="0">fix</text>
+          <g id="nodes"></g>
+          <circle id="dot" r="15" fill="var(--gold)" style="filter: drop-shadow(0 0 12px #ffd34d)" />
+        </g>
+
+        <!-- C: the chart -->
+        <g id="chart" opacity="0">
+          <text class="w8" y="-390" font-size="64" fill="var(--ink)">Seconds per 1080p frame</text>
+          <text y="-325" font-size="34" fill="var(--muted)">as rendered for these four clips, on this machine (log scale)</text>
+          <g id="ticks"></g>
+          <g id="rows"></g>
+        </g>
+      </svg>
+    </div>
+
+    <script>
+      // Wall-clock seconds per 1920x1080 frame, copied from ../motion-canvas/src/data.ts.
+      const DATA = [
+        { route: "Blender", how: "Cycles, 40 samples", color: "#f5792a", value: 39.9 },
+        { route: "Godot", how: "Movie Maker", color: "#478cbf", value: 142 / 429 },
+        { route: "Three.js", how: "headless Chrome", color: "#2ec4b6", value: 32.7 / 420 },
+        { route: "Motion Canvas", how: "Revideo", color: "#e6a700", value: 15.2 / 636 },
+      ];
+      const GOLD = "#ffd34d", PINK = "#ff5d8f", INK = "#f2f2f2";
+      const STEPS = ["plan", "block", "look", "polish", "render"];
+      const NX = (i) => (i - 2) * 360, HALF = 125;
+      const W = 1000, X0 = -330;
+      const logW = (v) => ((Math.log10(v) + 2) / 4) * W;
+      const valueOf = (w) => Math.pow(10, (w / W) * 4 - 2);
+      const fmt = (v) => (v < 0.1 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v < 10 ? v.toFixed(1) : v.toFixed(0)) + " s";
+
+      // Motion Canvas eases mapped to GSAP (power2 is cubic; MC's default tween ease is easeInOutCubic).
+      const IO = "power2.inOut", OUT = "power2.out", BACK = "back.out(1.70158)";
+
+      const NS = "http://www.w3.org/2000/svg";
+      const el = (tag, attrs, parent, text) => {
+        const n = document.createElementNS(NS, tag);
+        for (const k in attrs) n.setAttribute(k, attrs[k]);
+        if (text != null) n.textContent = text;
+        parent.appendChild(n);
+        return n;
+      };
+      const $ = (id) => document.getElementById(id);
+
+      // ---------------------------------------------------------------- build
+      const names = DATA.map((d, i) =>
+        el("text", { class: "w7", x: (i - 1.5) * 390, y: 30, "font-size": 46, fill: d.color, opacity: 0 }, $("roster"), d.route));
+
+      // An arrow drawn from 0 to `end` along a path, with its head riding the drawn tip.
+      function arrow(path, size, color) {
+        const L = path.getTotalLength();
+        const head = el("path", { d: `M0 0 L${-size * 1.4} ${-size} L${-size * 1.4} ${size} Z`, fill: color }, path.parentNode);
+        const s = { end: 0 };
+        const draw = () => {
+          const at = s.end * L, line = Math.max(0, at - size);
+          path.setAttribute("stroke-dasharray", `${line} ${L + 1}`);
+          path.setAttribute("opacity", at > 0 ? 1 : 0);
+          const p = path.getPointAtLength(at), q = path.getPointAtLength(Math.max(0, at - 1));
+          const deg = (Math.atan2(p.y - q.y, p.x - q.x) * 180) / Math.PI;
+          head.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${at > 1 ? deg : 0})`);
+          head.setAttribute("opacity", Math.min(1, at / size));
+        };
+        draw();
+        return { s, draw };
+      }
+      const arrows = STEPS.slice(0, -1).map((_, i) => {
+        const p = el("path", { d: `M${NX(i) + HALF + 14} 0 L${NX(i + 1) - HALF - 14} 0`, fill: "none",
+          stroke: "#6b7699", "stroke-width": 6, "stroke-linecap": "round" }, $("arrows"));
+        return arrow(p, 16, "#6b7699");
+      });
+      const ret = arrow($("ret"), 18, PINK);
+
+      const nodes = [], labels = [];
+      STEPS.forEach((s, i) => {
+        const at = el("g", { transform: `translate(${NX(i)} 0)` }, $("nodes"));
+        const g = el("g", {}, at);
+        el("rect", { x: -HALF, y: -58, width: HALF * 2, height: 116, rx: 26 }, g)
+          .setAttribute("style", "fill: #1b2030; stroke: #3a4260; stroke-width: 5");
+        labels.push(el("text", { class: "w7", "font-size": 46, style: `fill: ${INK}` }, g, s));
+        nodes.push(g);
+      });
+      const rects = nodes.map((g) => g.querySelector("rect"));
+
+      [0.01, 0.1, 1, 10, 100].forEach((v) => {
+        const g = el("g", { transform: `translate(${X0 + logW(v)} 0)` }, $("ticks"));
+        el("line", { y1: -250, y2: 250, stroke: "#ffffff1c", "stroke-width": 2, "stroke-dasharray": "8 10" }, g);
+        el("text", { y: 290, "font-size": 30, fill: "var(--muted)" }, g, `${v} s`);
+      });
+      const bars = [], values = [];
+      DATA.forEach((d, i) => {
+        const g = el("g", { transform: `translate(0 ${-180 + i * 120})` }, $("rows"));
+        el("text", { class: "w7", x: X0 - 40, y: -16, "font-size": 44, fill: d.color, style: "text-anchor: end" }, g, d.route);
+        el("text", { x: X0 - 40, y: 28, "font-size": 28, fill: "var(--muted)", style: "text-anchor: end" }, g, d.how);
+        bars.push(el("rect", { x: X0, y: -35, width: 0, height: 70, rx: 12, fill: d.color }, g));
+        values.push(el("text", { class: "w7", x: X0 + 24, "font-size": 40, fill: INK, opacity: 0, style: "text-anchor: start" }, g, fmt(0.01)));
+      });
+
+      // The title types from a fixed left edge, so its full width is measured once the font is in.
+      const FULL = "Four engines, one loop";
+      const title = $("title"), underline = $("underline");
+      const typed = { n: 0 }, line = { end: 0 };
+      const layoutTitle = () => {
+        title.textContent = FULL;                                   // measured on every call: no stale width
+        const halfW = title.getComputedTextLength() / 2;            // if a frame is seeked before the font loads
+        title.setAttribute("x", -halfW);
+        title.textContent = FULL.slice(0, Math.round(typed.n));
+        underline.setAttribute("x1", -halfW);
+        underline.setAttribute("x2", -halfW + 2 * halfW * line.end);
+        underline.setAttribute("opacity", line.end > 0 ? 1 : 0);
+      };
+
+      // ---------------------------------------------------------------- timeline
+      // Absolute times follow the Motion Canvas generator exactly (see BRIEF.md).
+      const tl = gsap.timeline({ paused: true, defaults: { ease: IO } });
+      gsap.set("#titleGroup", { svgOrigin: "0 0" });
+      gsap.set("#diagram", { y: 10 });
+      gsap.set(nodes, { scale: 0, transformOrigin: "50% 50%" });
+      gsap.set("#dot", { scale: 0, transformOrigin: "50% 50%" });
+
+      // A (0-2.0 s): type the title, underline it, roll call
+      tl.to(typed, { n: FULL.length, duration: 0.9, ease: "none", onUpdate: layoutTitle }, 0);
+      tl.to(line, { end: 1, duration: 0.45, onUpdate: layoutTitle }, 0.9);
+      names.forEach((n, i) => {
+        tl.to(n, { attr: { opacity: 1 }, duration: 0.3 }, 0.9 + i * 0.1);
+        tl.to(n, { attr: { y: 0 }, duration: 0.4, ease: OUT }, 0.9 + i * 0.1);
+      });
+
+      // B (2.0-6.7 s): the loop, with a token passing through it
+      tl.to("#titleGroup", { x: 0, y: -390, scale: 0.55, duration: 0.7 }, 2.0);
+      tl.to("#roster", { opacity: 0, duration: 0.4 }, 2.0);
+      nodes.forEach((n, i) => tl.to(n, { scale: 1, duration: 0.4, ease: BACK }, 2.2 + i * 0.08));
+      arrows.forEach((a, i) => tl.to(a.s, { end: 1, duration: 0.25, ease: OUT, onUpdate: a.draw }, 2.92 + i * 0.08));
+
+      const pulse = (i, t, color = GOLD) => {
+        tl.to(rects[i], { stroke: color, duration: 0.12 }, t);
+        tl.to(nodes[i], { scale: 1.1, duration: 0.1 }, t);
+        tl.to(nodes[i], { scale: 1, duration: 0.22, ease: BACK }, t + 0.1);
+      };
+      const hop = (from, to, t) => {
+        tl.set("#dot", { attr: { cx: NX(from) + HALF, cy: 0 } }, t);
+        tl.to("#dot", { scale: 1, duration: 0.06 }, t);
+        tl.to("#dot", { attr: { cx: NX(to) - HALF }, duration: 0.2 }, t + 0.06);
+        tl.to("#dot", { scale: 0, duration: 0.06 }, t + 0.26);
+        pulse(to, t + 0.32);
+        return t + 0.32;
+      };
+      pulse(0, 3.41);
+      let t = hop(0, 1, 3.51);
+      t = hop(1, 2, t);                                             // 4.15
+      tl.to(ret.s, { end: 1, duration: 0.35, onUpdate: ret.draw }, t);
+      tl.to("#fixLabel", { attr: { opacity: 1 }, duration: 0.25 }, t + 0.15);
+      t += 0.4;                                                     // 4.55: the token rides the fix arrow
+      const retPath = $("ret"), retL = retPath.getTotalLength(), along = { u: 0 };
+      const ride = () => {
+        const p = retPath.getPointAtLength(along.u * retL);
+        $("dot").setAttribute("cx", p.x);
+        $("dot").setAttribute("cy", p.y);
+      };
+      tl.to("#dot", { scale: 1, duration: 0.06, onStart: ride }, t);
+      tl.to(along, { u: 1, duration: 0.45, onUpdate: ride }, t + 0.06);
+      tl.to("#dot", { scale: 0, duration: 0.06 }, t + 0.51);
+      t += 0.57;                                                    // 5.12
+      pulse(1, t, PINK);
+      t = hop(1, 2, t);
+      t = hop(2, 3, t);
+      t = hop(3, 4, t);                                             // 6.08
+      tl.to(rects[4], { fill: GOLD, stroke: GOLD, duration: 0.25 }, t);
+      tl.to(labels[4], { fill: "#14161c", duration: 0.25 }, t);
+      t += 0.6;                                                     // 6.68
+
+      // C (6.7-10.7 s): what each route costs per frame
+      tl.to("#diagram", { y: -120, duration: 0.4 }, t);
+      tl.to("#diagram", { opacity: 0, duration: 0.35 }, t);
+      tl.to("#titleGroup", { opacity: 0, duration: 0.35 }, t);
+      t += 0.4;                                                     // 7.08
+      gsap.set("#chart", { y: 110 });
+      tl.to("#chart", { opacity: 1, duration: 0.45 }, t);
+      tl.to("#chart", { y: 45, duration: 0.5, ease: OUT }, t);
+      t += 0.5;                                                     // 7.58
+      bars.forEach((b, i) => {
+        const g = { u: 0 };
+        tl.to(values[i], { attr: { opacity: 1 }, duration: 0.3 }, t + i * 0.18);
+        tl.to(g, { u: 1, duration: 1.0, ease: "none", onUpdate: () => {
+          const w = logW(DATA[i].value) * (1 - Math.pow(1 - g.u, 3));   // easeOutCubic, as in the original
+          b.setAttribute("width", w);
+          values[i].setAttribute("x", X0 + w + 24);
+          values[i].textContent = fmt(valueOf(w));
+        } }, t + i * 0.18);
+      });
+      tl.to({}, { duration: 1.6 }, t + 3 * 0.18 + 1.0);             // hold to 10.72
+
+      layoutTitle();
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

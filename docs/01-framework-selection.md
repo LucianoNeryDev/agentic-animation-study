@@ -15,7 +15,7 @@ Features, image quality and community size come after these four. A beautiful to
 
 ## Candidates
 
-The starting list was Blender, Godot, Three.js, Babylon.js, Panda3D, Bevy, Motion Canvas, Glaxnimate, StykAnimate and Stykz. Research added Revideo, Remotion and Manim (as Motion Canvas alternatives) and, for 2D, Synfig, Spine, Rive, Moho, OpenToonz, Toon Boom and Aseprite.
+The starting list was Blender, Godot, Three.js, Babylon.js, Panda3D, Bevy, Motion Canvas, Glaxnimate, StykAnimate and Stykz. Research added Revideo, Remotion and Manim (as Motion Canvas alternatives) and, for 2D, Synfig, Spine, Rive, Moho, OpenToonz, Toon Boom and Aseprite. HyperFrames was tested later, in November 2026 ([docs/09](09-hyperframes.md)).
 
 | Framework | Language | Verdict | Why |
 | --- | --- | --- | --- |
@@ -29,6 +29,7 @@ The starting list was Blender, Godot, Three.js, Babylon.js, Panda3D, Bevy, Motio
 | Glaxnimate | Python | Rejected | A KDE vector animator with a Python module and Lottie/SVG export. Useful for app and web animation assets, but niche, thinly documented, and the PyPI package looked old (0.5.4, September 2023). |
 | Stykz | GUI | Rejected | Freeware stick-figure animator modelled on Pivot, unmaintained since about 2011, with no scripting and a proprietary file format. |
 | StykAnimate | GUI (Electron + WebGPU) | Rejected for now | See below. |
+| HyperFrames | HTML / CSS / JS (GSAP) | **Tested, recommended as a fifth route** | Meets all four requirements and ships its own checking tools (`check`, `snapshot` contact sheets). About twice Revideo's render cost here, and its MP4 output is reproducible to the eye but not byte for byte. Apache-2.0, very active, pre-1.0. Not in the skill until an ADR records the decision ([docs/09](09-hyperframes.md)). |
 | Remotion | React | Not chosen | Excellent headless CLI, but a company licence is required once a company passes a few people, and it overlaps Motion Canvas. |
 | Manim | Python | Not chosen | CLI-first and strong for maths animation; overlaps Motion Canvas for general 2D. |
 | Synfig | XML / CLI | Not chosen | Open source with a text format and a renderer that runs without a display, but the stable release was still 1.4.5 (May 2024) with 1.5.x only as previews, and it overlaps Motion Canvas. |
