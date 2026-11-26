@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- HyperFrames tested as a candidate route: the Motion Canvas showcase ported to HTML and GSAP, render cost and determinism measured against Revideo, and a side-by-side video ([docs/09](docs/09-hyperframes.md)).
+- HyperFrames added as a fifth route ([ADR 0005](docs/adr/0005-hyperframes-fifth-route.md)): a route guide in the skill, chosen for web-native 2D video.
+- HyperFrames taken through every round: smoke test, a showcase scene ("Reel"), the shared 2D stick fight (as a TV sports replay), Warrior vs Dragon (as a shadow-puppet storybook), and a beat-for-beat port of the Motion Canvas showcase raced against Revideo ([docs/09](docs/09-hyperframes.md)).
+- New side-by-side videos: all four 2D routes in one grid, all three Warrior vs Dragon versions, and the Loop in Motion Canvas and HyperFrames.
+- [docs/10](docs/10-compare.md) links every video of the study by round and route.
 
 ## 1.0.0 — 2026-10-20
 

@@ -1,11 +1,13 @@
 # 6. Warrior vs Dragon
 
-The final study: a 20-second fight between a stick-figure warrior (helmet with plume, cape, sword, round shield) and a dragon, made twice, as a Godot 2D game scene and a Motion Canvas illustration. Source in [`projects/warrior-dragon/`](../projects/warrior-dragon/); brief and beat sheet in its [`BRIEF.md`](../projects/warrior-dragon/BRIEF.md).
+The final study: a 20-second fight between a stick-figure warrior (helmet with plume, cape, sword, round shield) and a dragon, made three times from one baked choreography: a Godot 2D game scene, a Motion Canvas illustration and, added later, a HyperFrames shadow-puppet storybook. Source in [`projects/warrior-dragon/`](../projects/warrior-dragon/); brief and beat sheet in its [`BRIEF.md`](../projects/warrior-dragon/BRIEF.md).
 
-| Godot 2D | Motion Canvas |
-| --- | --- |
-| [![Godot](images/warrior-dragon-godot.jpg)](../media/warrior-dragon-godot.mp4) | [![Motion Canvas](images/warrior-dragon-motion-canvas.jpg)](../media/warrior-dragon-motion-canvas.mp4) |
-| [Video](../media/warrior-dragon-godot.mp4): 1200 frames, 60 fps, ≈ 5 min to record | [Video](../media/warrior-dragon-motion-canvas.mp4): 1200 frames, 60 fps, ≈ 50 s to render |
+| Godot 2D | Motion Canvas | HyperFrames |
+| --- | --- | --- |
+| [![Godot](images/warrior-dragon-godot.jpg)](../media/warrior-dragon-godot.mp4) | [![Motion Canvas](images/warrior-dragon-motion-canvas.jpg)](../media/warrior-dragon-motion-canvas.mp4) | [![HyperFrames](images/warrior-dragon-hyperframes.jpg)](../media/warrior-dragon-hyperframes.mp4) |
+| [Video](../media/warrior-dragon-godot.mp4): 1200 frames, 60 fps, ≈ 5 min to record | [Video](../media/warrior-dragon-motion-canvas.mp4): 1200 frames, 60 fps, ≈ 50 s to render | [Video](../media/warrior-dragon-hyperframes.mp4): 1200 frames, 60 fps, ≈ 110 s to render |
+
+All three in one frame: [side-by-side video](../media/warrior-dragon-compare.mp4).
 
 ## The fight
 
@@ -28,9 +30,9 @@ The 2D study kept the choreography as data and ported a sampler to each engine. 
 - the dragon's body outline, belly band, spikes, skull and jaw polygons, teeth, horns, eye, both wings (bones and membrane), four legs with claws, mouth position, fire direction and intensity, and shadow;
 - health values and events (hits with position and power, dust, roar, victory).
 
-The Godot and Motion Canvas versions contain no animation logic. They only draw those shapes in their own style, so the two videos match pose for pose; the only thing that differs is the look.
+The Godot, Motion Canvas and HyperFrames versions contain no animation logic. They only draw those shapes in their own style, so the videos match pose for pose; the only thing that differs is the look. The HyperFrames version loads the bake as a script (`bake.js`, a global) and draws frame `round(t × 60)` on every seek.
 
-![The two versions, same frames](images/wd-side-by-side.jpg)
+[![The three versions, same frame](images/wd-side-by-side.jpg)](../media/warrior-dragon-compare.mp4)
 
 ### What `choreo.py` contains
 
@@ -67,6 +69,14 @@ The Godot and Motion Canvas versions contain no animation logic. They only draw 
 
 ![Motion Canvas beats](images/warrior-dragon-motion-canvas-strip.jpg)
 
+**HyperFrames: a shadow-puppet storybook.**
+- A paper screen lit by a lamp from behind: a warm gradient with seeded flicker, SVG noise for the paper grain, multiplied over everything.
+- Both characters as black silhouettes with cut-outs that let the lamp through (a perforated shield, the helmet slit, belly scales, the dragon's eye); translucent wing membranes; distant ruins as paler, softer shadows.
+- Fire as orange light on the screen behind the puppets (`screen` blending), seeded embers, a velvet proscenium.
+- Eight narrated captions in a serif face, set as HTML text, from "At dusk, a lone warrior came to the ruins…" to "And the valley was free."
+
+![HyperFrames beats](images/warrior-dragon-hyperframes-strip.jpg)
+
 ## Fixed after looking
 
 | Problem seen in frames | Cause, measured | Fix |
@@ -80,3 +90,8 @@ The Godot and Motion Canvas versions contain no animation logic. They only draw 
 | Motion Canvas: flames died before the shield | Flame speed too low for the distance | Faster flames that stop at the shield and splash upward |
 | Name cards covered the dragon | Placed at the action's height | Moved into the dark ground band |
 | "VICTORY" only completed on the last frame | The hit-stops (0.54 s in total) pushed the ending | Victory beat brought forward to 18.7 s |
+| HyperFrames: scan lines across the screen | Paper fibre texture too strong | Fibre gain from 0.16 to 0.06 |
+| HyperFrames: fire was a cream-white blob | Added light on an already bright lamp clipped to white | `screen` blending, darker lamp mid-tones, more saturated flames |
+| HyperFrames: smoke and dust as hard grey balls | Opaque fills | Soft-edged puffs |
+| HyperFrames: 220 ms per frame | Measured in the page: scaled scenery bitmaps cost about 20 ms each and the lamp gradient 19 ms in Chrome's software canvas | Scenery drawn as paths, the lamp cached: drawing fell from 174 to 32 ms per frame |
+| HyperFrames: captions too short to read | `check` enforces about 0.5 s + 0.3 s a word | Shortened and merged into eight lines; the last held 2.1 s |

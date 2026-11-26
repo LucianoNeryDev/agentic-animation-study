@@ -25,6 +25,7 @@ renders/
 projects/warrior-dragon/bake.json
 projects/warrior-dragon/godot/bake.json
 projects/warrior-dragon/motion-canvas/src/bake.json
+projects/warrior-dragon/hyperframes/bake.js
 
 # Revideo / Vite build output
 dist/

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Reel</title>
+    <script src="node_modules/gsap/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Noto Sans"; font-weight: 400; src: url("assets/fonts/NotoSans-Regular.ttf"); }
+      @font-face { font-family: "Noto Sans"; font-weight: 600; src: url("assets/fonts/NotoSans-SemiBold.ttf"); }
+      @font-face { font-family: "Noto Sans"; font-weight: 800; src: url("assets/fonts/NotoSans-ExtraBold.ttf"); }
+      @font-face { font-family: "Noto Sans Mono"; font-weight: 400; src: url("assets/fonts/NotoSansMono-Regular.ttf"); }
+      @font-face { font-family: "Noto Sans Mono"; font-weight: 600; src: url("assets/fonts/NotoSansMono-SemiBold.ttf"); }
+      :root {
+        --ground: #0a0c11; --window: #10131a; --chrome: #0c0f15; --card: #151923; --line: #ffffff17;
+        --ink: #f2f4f8; --muted: #8e97aa; --teal: #2ec4b6; --gold: #ffd34d; --pink: #ff5d8f;
+        --blender: #f5792a; --godot: #6aa6d6; --three: #2ec4b6; --mc: #e6a700;
+        --sans: "Noto Sans", sans-serif; --mono: "Noto Sans Mono", monospace;
+        --grad: linear-gradient(90deg, #7cf0e0 0%, #ffd34d 50%, #ff5d8f 100%);
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      body { font-family: var(--sans); color: var(--ink); }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      .abs { position: absolute; }
+
+      /* ground: two slow glows and a dot grid */
+      #ground { position: absolute; inset: 0; }
+      .glow { position: absolute; width: 1100px; height: 1100px; border-radius: 50%; filter: blur(40px); }
+      #glowA { left: -380px; top: -520px; background: radial-gradient(closest-side, #2ec4b62e, transparent); }
+      #glowB { left: 1180px; top: 380px; background: radial-gradient(closest-side, #ff5d8f24, transparent); }
+      #dots { position: absolute; inset: 0; background-image: radial-gradient(#ffffff12 1.5px, transparent 1.6px); background-size: 32px 32px; }
+
+      /* browser window, all CSS */
+      #browser { position: absolute; left: 120px; top: 70px; width: 1680px; height: 940px; border-radius: 18px;
+        background: var(--window); border: 1px solid #ffffff24; overflow: hidden;
+        box-shadow: 0 40px 120px #000000b3, 0 0 0 1px #00000080; }
+      #tabs { height: 46px; background: var(--chrome); display: flex; align-items: flex-end; padding: 0 16px; gap: 6px; }
+      .lights { display: flex; gap: 9px; align-self: center; margin-right: 18px; }
+      .lights i { width: 13px; height: 13px; border-radius: 50%; display: block; }
+      .tab { height: 36px; padding: 0 16px; border-radius: 10px 10px 0 0; display: flex; align-items: center; gap: 10px;
+        font-size: 15px; color: var(--muted); width: 340px; white-space: nowrap; }
+      .tab.on { background: var(--window); color: var(--ink); }
+      .tab .x { margin-left: auto; color: #8e97aa; font-size: 16px; }
+      .fav { width: 16px; height: 16px; border-radius: 4px; background: var(--grad); flex: none; }
+      .fav.dim { background: #3a4150; }
+      .plus { color: #8e97aa; font-size: 22px; align-self: center; margin-left: 6px; }
+      #bar { height: 52px; display: flex; align-items: center; gap: 18px; padding: 0 18px; border-bottom: 1px solid var(--line); }
+      #bar svg { flex: none; }
+      #addr { flex: 1; height: 36px; border-radius: 10px; background: #080a0f; border: 1px solid var(--line);
+        display: flex; align-items: center; gap: 10px; padding: 0 14px; font: 400 17px var(--mono); color: var(--muted); }
+      #addr b { color: var(--ink); font-weight: 600; }
+      #viewport { position: absolute; left: 0; top: 98px; width: 100%; height: 842px; overflow: hidden; }
+      #thumb { position: absolute; right: 4px; top: 0; width: 6px; height: 579px; border-radius: 3px; background: #ffffff26; }
+      #dim { position: absolute; inset: 0; background: #05060a; opacity: 0; pointer-events: none; }
+
+      /* the page */
+      #page { position: absolute; left: 0; top: 0; width: 100%; padding: 28px 64px; }
+      #nav { height: 40px; display: flex; align-items: center; gap: 14px; }
+      #nav .mark { width: 30px; height: 30px; border-radius: 8px; background: var(--grad); }
+      #nav .name { font: 600 19px var(--mono); }
+      #nav .links { margin-left: auto; display: flex; gap: 34px; font-size: 18px; color: var(--muted); }
+      #nav .links .on { color: var(--ink); box-shadow: 0 2px 0 var(--teal); }
+      #hero { margin-top: 44px; height: 288px; }
+      #hero .eyebrow { font: 600 18px var(--mono); color: var(--teal); letter-spacing: 0.04em; }
+      #hero h1 { margin-top: 16px; font-size: 66px; line-height: 1.08; font-weight: 800; letter-spacing: -0.02em; }
+      #hero p { margin-top: 20px; font-size: 23px; color: var(--muted); }
+      #grid { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 372.5px; gap: 28px; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+      .media { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #07080b; }
+      .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+      .body { height: 92px; padding: 14px 20px; }
+      .row { display: flex; align-items: center; gap: 9px; font: 600 14px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+      .row .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+      .row .meta { margin-left: auto; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+      .title { margin-top: 8px; font-size: 24px; font-weight: 600; }
+      .title span { color: var(--muted); font-weight: 400; font-size: 19px; margin-left: 8px; }
+
+      /* full-frame player: the clicked card's footage, FLIPped from the card's box */
+      #player { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden;
+        background: #07080b; opacity: 0; }
+      #player video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+      /* HUD over the footage, mixed with mix-blend-mode */
+      #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 120px; mix-blend-mode: difference; opacity: 0;
+        font: 600 30px var(--mono); color: #ffffff; }
+      #hud .l { position: absolute; left: 72px; top: 52px; }
+      #hud .r { position: absolute; right: 72px; top: 52px; font-weight: 400; }
+
+      /* kinetic captions in a frosted pill */
+      #caps { position: absolute; left: 0; top: 872px; width: 1920px; height: 112px; }
+      .pill { display: inline-flex; align-items: center; height: 112px; padding: 0 52px; border-radius: 56px;
+        background: #0c0f16 linear-gradient(180deg, #ffffff10, #ffffff03); background-color: #0c0f1666;
+        border: 1px solid #ffffff2e; backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+        box-shadow: 0 18px 60px #00000080; }
+      .cap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; visibility: hidden; }
+      .line { display: inline-flex; gap: 0.26em; font-size: 58px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
+      .w { display: inline-block; }
+      .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+      /* cursor and click ripple */
+      #cursor { position: absolute; left: 0; top: 0; width: 60px; height: 72px; filter: drop-shadow(0 6px 10px #000000a0); }
+      #ripple { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%;
+        border: 4px solid var(--teal); opacity: 0; }
+
+      /* end card */
+      #end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; }
+      #endTitle { font-size: 118px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; padding: 0 8px 10px; }
+      #endSub { display: flex; gap: 22px; font: 600 46px var(--mono); color: #c9d1e0; }
+      #endSub .gold { color: var(--gold); }
+      #endSub .arrow { display: flex; align-items: center; }  /* the mono font has no arrow glyph: drawn as SVG */
+      #endRule { width: 760px; height: 4px; border-radius: 2px; background: var(--grad); transform-origin: 0 50%; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="9"
+         data-fps="60" data-width="1920" data-height="1080">
+
+      <div id="ground"><div id="glowA" class="glow"></div><div id="glowB" class="glow"></div><div id="dots"></div></div>
+
+      <div id="browser">
+        <div id="tabs" data-layout-allow-occlusion>
+          <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+          <div class="tab on"><span class="fav"></span>Showcase · agentic-animation-study<span class="x">×</span></div>
+          <div class="tab"><span class="fav dim"></span>README.md<span class="x">×</span></div>
+          <div class="plus">+</div>
+        </div>
+        <div id="bar" data-layout-allow-occlusion>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e97aa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a5263" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e97aa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>
+          <div id="addr">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2ec4b6" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <span>LucianoNeryDev/<b>agentic-animation-study</b>/docs/04-four-route-showcase</span>
+          </div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#8e97aa"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        </div>
+
+        <div id="viewport">
+          <div id="page">
+            <div id="nav">
+              <div class="mark"></div><div class="name">agentic-animation-study</div>
+              <div class="links"><span>README</span><span>Docs</span><span>Skill</span><span class="on">Showcase</span><span>Media</span></div>
+            </div>
+            <div id="hero">
+              <div class="eyebrow">docs/04 · SHOWCASE · THIS PAGE IS A HYPERFRAMES VIDEO</div>
+              <h1>One scene per engine,<br />each built on its strength.</h1>
+              <p>Planned, rendered and checked frame by frame by a coding agent.</p>
+            </div>
+            <div id="grid">
+              <div class="card" id="card-collapse"><div class="media" id="media-collapse">
+                <video id="v-collapse" class="clip" src="assets/footage/card-collapse.mp4" data-start="0" data-duration="4" data-media-start="0" data-track-index="1" muted playsinline></video></div>
+                <div class="body"><div class="row" style="color:var(--blender)"><i class="dot"></i>Blender<span class="meta">6.0 s · 24 fps</span></div>
+                <div class="title">Collapse<span>Cycles, rigid bodies</span></div></div></div>
+              <div class="card" id="card-arena"><div class="media" id="media-arena">
+                <video id="v-arena" class="clip" src="assets/footage/card-arena.mp4" data-start="0" data-duration="4" data-media-start="0" data-track-index="2" muted playsinline></video></div>
+                <div class="body"><div class="row" style="color:var(--godot)"><i class="dot"></i>Godot<span class="meta">7.15 s · 60 fps</span></div>
+                <div class="title">Arena<span>hit-stop, physics</span></div></div></div>
+              <div class="card" id="card-loop"><div class="media" id="media-loop">
+                <video id="v-loop" class="clip" src="assets/footage/card-loop.mp4" data-start="0" data-duration="4" data-media-start="0" data-track-index="3" muted playsinline></video></div>
+                <div class="body"><div class="row" style="color:var(--mc)"><i class="dot"></i>Motion Canvas<span class="meta">10.7 s · 60 fps</span></div>
+                <div class="title">Loop<span>type, diagram, chart</span></div></div></div>
+              <div class="card" id="card-dragon"><div class="media" id="media-dragon">
+                <video id="v-dragon" class="clip" src="assets/footage/card-dragon.mp4" data-start="0" data-duration="4" data-media-start="0" data-track-index="4" muted playsinline></video></div>
+                <div class="body"><div class="row" style="color:var(--godot)"><i class="dot"></i>Godot<span class="meta">20 s · 60 fps</span></div>
+                <div class="title">Warrior vs dragon<span>2D fight</span></div></div></div>
+              <div class="card" id="card-field"><div class="media" id="media-field">
+                <video id="v-field" class="clip" src="assets/footage/card-field.mp4" data-start="0" data-duration="4" data-media-start="0" data-track-index="5" muted playsinline></video></div>
+                <div class="body"><div class="row" style="color:var(--three)"><i class="dot"></i>Three.js<span class="meta">7.0 s · 60 fps</span></div>
+                <div class="title">Field<span>14,400 cubes</span></div></div></div>
+              <div class="card" id="card-fight"><div class="media" id="media-fight">
+                <video id="v-fight" class="clip" src="assets/footage/card-fight.mp4" data-start="0" data-duration="4" data-media-start="0" data-track-index="6" muted playsinline></video></div>
+                <div class="body"><div class="row" style="color:var(--blender)"><i class="dot"></i>Grease Pencil<span class="meta">4.5 s · 24 fps</span></div>
+                <div class="title">2D fight<span>drawn strokes</span></div></div></div>
+            </div>
+          </div>
+          <div id="thumb"></div>
+          <div id="dim"></div>
+        </div>
+      </div>
+
+      <!-- The same Three.js render, full size. card-field.mp4 starts at source 0.2 s, so at film time t both show source t + 0.2 s. -->
+      <div id="player">
+        <video id="v-player" class="clip" src="assets/footage/field-full.mp4" data-start="3.1" data-duration="3.7"
+               data-media-start="3.3" data-track-index="7" muted playsinline></video>
+      </div>
+
+      <div id="hud"><span class="l" id="frameNo">f 0000 / 0510</span><span class="r">three.js · Field · 60 fps</span></div>
+
+      <div id="end">
+        <div id="endTitle" class="grad">Agentic Animation Study</div>
+        <div id="endRule"></div>
+        <div id="endSub"><span class="t">HTML</span><span class="t">·</span><span class="t">CSS</span><span class="t">·</span><span class="t">GSAP</span><span class="t arrow"><svg width="52" height="30" viewBox="0 0 52 30" fill="none" stroke="#2ec4b6" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" aria-label="to"><path d="M3 15H47M35 4L47 15L35 26"/></svg></span><span class="t gold">MP4</span></div>
+      </div>
+
+      <div id="caps" data-layout-allow-overlap data-layout-allow-occlusion>
+        <div class="cap" id="cap0"><div class="pill"><span class="line"><span class="w">Five</span><span class="w">engines.</span></span></div></div>
+        <div class="cap" id="cap1"><div class="pill"><span class="line"><span class="w">One</span><span class="w"><span class="grad">loop.</span></span></span></div></div>
+        <div class="cap" id="cap2"><div class="pill"><span class="line"><span class="w">Every</span><span class="w">frame</span><span class="w">checked</span><span class="w">by</span><span class="w">an</span><span class="w"><span class="grad">agent.</span></span></span></div></div>
+      </div>
+
+      <div id="ripple"></div>
+      <svg id="cursor" viewBox="0 0 50 60"><path d="M3 3 L3 49 L15 38 L23 56 L31 52.5 L23 35 L40 35 Z" fill="#ffffff" stroke="#0a0c11" stroke-width="3" stroke-linejoin="round" /></svg>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const lerp = (a, b, u) => a + (b - a) * u;
+      const clamp01 = (u) => Math.max(0, Math.min(1, u));
+      const span = (t, a, d, ease) => ease(clamp01((t - a) / d));
+      const FPS = 60, FRAMES = 540;
+
+      // ---------------------------------------------------------------- beats (seconds)
+      const T = {
+        enter: 0, scroll: 0.85, cursorIn: 2.1, hover: 2.85, click: 3.1,
+        flip: 3.18, flipDur: 0.8,          // card → full frame
+        shrink: 5.9, shrinkDur: 0.45,       // full frame → tile, then gone
+      };
+      const SCROLL = 383;                   // grid bottom to viewport bottom - 28 px (fixed layout)
+      const PAGE_H = 1225, VIEW_H = 842;
+      const CURSOR_TIP = { x: 1000, y: 745 }; // centre of the Three.js card after scrolling
+
+      const flipEase = gsap.parseEase("power4.inOut");
+      const shrinkEase = gsap.parseEase("power3.inOut");
+
+      // ---------------------------------------------------------------- derived layout, a function of time
+      // The card's box is measured once, here at build time, before any transform is set. Its layout does not
+      // depend on fonts (fixed rows and heights). At render time the browser's and page's transforms are applied
+      // to it from GSAP's own values, so no frame measures the DOM.
+      const player = $("player"), browser = $("browser");
+      const caps = [$("cap0"), $("cap1"), $("cap2")];
+      const B0 = browser.getBoundingClientRect(), M0 = $("media-field").getBoundingClientRect();
+      const K0 = B0.width / 1680;
+      const CARD = { x: (M0.left - B0.left) / K0, y: (M0.top - B0.top) / K0, w: M0.width / K0 };
+      const BROWSER = { x: 120, y: 70, w: 1680, h: 940 };
+      const get = gsap.getProperty;
+      function cardRect() {
+        const sb = get(browser, "scale"), by = get(browser, "y");
+        const ly = CARD.y + get("#page", "y") + get("#card-field", "y");      // inside the window, unscaled
+        return {
+          x: BROWSER.x + BROWSER.w / 2 + (CARD.x - BROWSER.w / 2) * sb,
+          y: BROWSER.y + by + BROWSER.h / 2 + (ly - BROWSER.h / 2) * sb,
+          s: (CARD.w * sb) / 1920,
+        };
+      }
+      function render() {
+        const t = tl.time();
+        // FLIP: First = the card's media box, Last = the full frame. Uniform scale: both are 16:9.
+        const c = cardRect();
+        const p = span(t, T.flip, T.flipDur, flipEase);
+        const q = span(t, T.shrink, T.shrinkDur, shrinkEase);
+        let s, x, y, rt, rb;
+        if (q > 0) {
+          s = lerp(1, 0.55, q); x = (1920 - 1920 * s) / 2; y = (1080 - 1080 * s) / 2 - 30 * q;
+          rt = rb = lerp(0, 26, q);
+        } else {
+          s = lerp(c.s, 1, p); x = lerp(c.x, 0, p); y = lerp(c.y, 0, p);
+          rt = lerp(15, 0, p); rb = 0;
+        }
+        player.style.transform = `translate(${x.toFixed(3)}px, ${y.toFixed(3)}px) scale(${s.toFixed(5)})`;
+        player.style.borderRadius = `${rt / s}px ${rt / s}px ${rb / s}px ${rb / s}px`;
+
+        // Frame counter in the HUD.
+        const f = Math.min(FRAMES - 1, Math.round(t * FPS));
+        $("frameNo").textContent = `f ${String(f).padStart(4, "0")} / ${FRAMES}`;
+      }
+
+      // ---------------------------------------------------------------- timeline
+      const tl = gsap.timeline({ paused: true, onUpdate: render });
+
+      // ground drifts slowly the whole time
+      tl.fromTo("#glowA", { x: 0, y: 0 }, { x: 260, y: 120, duration: 9, ease: "sine.inOut" }, 0);
+      tl.fromTo("#glowB", { x: 0, y: 0 }, { x: -300, y: -140, duration: 9, ease: "sine.inOut" }, 0);
+
+      // 0.0-0.7 window rises in
+      tl.fromTo("#browser", { opacity: 0.35, y: 90, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out" }, T.enter);
+
+      // 0.85-2.0 the page scrolls down to the grid; the scrollbar thumb follows
+      tl.fromTo("#page", { y: 0 }, { y: -SCROLL, duration: 1.15, ease: "power2.inOut" }, T.scroll);
+      tl.fromTo("#thumb", { y: 0 }, { y: SCROLL * (VIEW_H / PAGE_H), duration: 1.15, ease: "power2.inOut" }, T.scroll);
+
+      // captions: each in its own frosted pill; words blur in one by one, rise out, then a hard kill
+      const capIn = (cap, at, gap, first = false) => {
+        tl.set(cap, { visibility: "visible" }, at - 0.01);
+        tl.fromTo(cap.querySelector(".pill"), { opacity: 0, scale: 0.86 },
+                  { opacity: 1, scale: 1, duration: 0.34, ease: "back.out(1.6)", immediateRender: first }, at);
+        cap.querySelectorAll(".w").forEach((w, j) =>
+          tl.fromTo(w, { yPercent: 70, opacity: 0, filter: "blur(14px)" },
+                       { yPercent: 0, opacity: 1, filter: "blur(0px)", duration: 0.36, ease: "power3.out" }, at + 0.12 + j * gap));
+      };
+      const capOut = (cap, at) => {
+        tl.to(cap.querySelectorAll(".w"), { yPercent: -45, opacity: 0, duration: 0.16, ease: "power2.in", stagger: 0.03 }, at);
+        tl.to(cap.querySelector(".pill"), { opacity: 0, scale: 0.92, duration: 0.18, ease: "power2.in" }, at + 0.08);
+        tl.set(cap, { visibility: "hidden" }, at + 0.3);
+      };
+      capIn(caps[0], 0.4, 0.18, true);
+      capOut(caps[0], 1.72);
+      capIn(caps[1], 1.98, 0.2);
+      capOut(caps[1], 2.92);
+      capIn(caps[2], 3.95, 0.14);
+      capOut(caps[2], 5.7);
+
+      // 2.1-3.0 the cursor arrives on a curve (x and y on different eases), hovers, clicks
+      gsap.set("#cursor", { x: 1990, y: 1130 });
+      tl.to("#cursor", { x: CURSOR_TIP.x - 3, duration: 0.9, ease: "power2.out" }, T.cursorIn);
+      tl.to("#cursor", { y: CURSOR_TIP.y - 3, duration: 0.9, ease: "power4.out" }, T.cursorIn);
+      tl.to("#card-field", { y: -8, borderColor: "#2ec4b6", boxShadow: "0 0 0 2px #2ec4b6, 0 24px 60px #2ec4b640",
+        duration: 0.25, ease: "power2.out" }, T.hover);
+      tl.to("#cursor", { scale: 0.8, transformOrigin: "6% 5%", duration: 0.07, ease: "power2.in" }, T.click);
+      tl.to("#cursor", { scale: 1, duration: 0.14, ease: "power2.out" }, T.click + 0.07);
+      gsap.set("#ripple", { x: CURSOR_TIP.x, y: CURSOR_TIP.y, scale: 0.2 });
+      tl.fromTo("#ripple", { opacity: 0.95, scale: 0.2 }, { opacity: 0, scale: 2.6, duration: 0.5, ease: "power2.out" }, T.click);
+      tl.to("#cursor", { opacity: 0, duration: 0.15 }, T.flip + 0.02);
+
+      // 3.18-3.98 FLIP: the player takes over from the card on the same source frame and grows to the frame
+      tl.set(player, { opacity: 1 }, T.flip);
+      tl.set("#media-field", { opacity: 0 }, T.flip);
+      tl.to("#browser", { scale: 0.955, duration: T.flipDur, ease: "power3.inOut" }, T.flip);
+      tl.to("#dim", { opacity: 0.65, duration: T.flipDur, ease: "power2.inOut" }, T.flip);
+      tl.set("#browser", { opacity: 0 }, 4.0);
+
+      // 4.0-6.0 full frame: HUD counts frames (mix-blend-mode: difference over the footage)
+      tl.to("#hud", { opacity: 1, duration: 0.3 }, 4.0);
+      tl.to("#hud", { opacity: 0, duration: 0.2 }, T.shrink);
+
+      // 5.9-6.35 the footage shrinks to a tile and fades
+      tl.to(player, { opacity: 0, duration: 0.25, ease: "power2.in" }, T.shrink + 0.2);
+
+      // 6.3-6.96 end card, held 2 s
+      gsap.set("#endTitle", { clipPath: "inset(0% 100% 0% 0%)" });
+      tl.fromTo("#endTitle", { clipPath: "inset(0% 100% 0% 0%)", y: 26 },
+                             { clipPath: "inset(0% 0% 0% 0%)", y: 0, duration: 0.6, ease: "power3.out" }, 6.3);
+      tl.fromTo("#endRule", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.inOut" }, 6.62);
+      tl.fromTo("#endSub .t", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "power3.out", stagger: 0.04 }, 6.66);
+      tl.to({}, { duration: 0.01 }, 8.99);                            // runs to 9.0
+
+      render();
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

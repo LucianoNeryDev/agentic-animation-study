@@ -1,6 +1,6 @@
-# 4. Four-route showcase
+# 4. Route showcase
 
-One short scene per framework, each designed around what that framework does best rather than a shared subject. Every project has a `BRIEF.md` with its beat sheet, methods and render commands in [`projects/showcase/`](../projects/showcase/).
+One short scene per framework, each designed around what that framework does best rather than a shared subject. The first four were made together; HyperFrames was added later ([ADR 0005](adr/0005-hyperframes-fifth-route.md)). Every project has a `BRIEF.md` with its beat sheet, methods and render commands in [`projects/showcase/`](../projects/showcase/).
 
 ## Blender: "Collapse"
 
@@ -62,6 +62,24 @@ A typed title names the four routes; the skill's plan → block → look → pol
 
 ![Loop beats](images/showcase-motion-canvas-loop-strip.jpg)
 
+## HyperFrames: "Reel"
+
+[![Reel](images/showcase-hyperframes-reel.jpg)](../media/showcase-hyperframes-reel.mp4)
+
+*9.0 s, 60 fps, 540 frames. [Video](../media/showcase-hyperframes-reel.mp4).*
+
+A browser window scrolls into a page about this study. Its cards play the study's own videos; a cursor clicks the Three.js card, which grows to fill the frame while it keeps playing; captions come in word by word, and the film ends on its title card.
+
+- **Shows:** web-native video. The window, tabs, address bar and card grid are real HTML and CSS layout and type; six clips from `media/` play as footage inside it, frame-accurate when seeked; the captions use `backdrop-filter` pills, gradient text and a blend-mode frame counter.
+- **Methods:** one GSAP timeline; the click is a FLIP from the card's box to the frame, handed over between two copies of the clip aligned to the same source frame; the card's box is measured once at load and moved with GSAP's own values, so no frame depends on seek order.
+- **Footage check:** every rendered frame of the full-frame clip matched its expected source frame (PSNR against the neighbouring frames), and the hand-over shows no jump.
+- **Fixed after looking:** footage referenced outside the project failed `check` (now inside, a symlink for the full-size clip); one black frame at the hand-over (the full-size clip started 2 frames late); the end title overlapped the shrinking clip; the tab title wrapped; the mono font had no "→".
+- **Cost:** 100 s for 540 frames (≈ 0.19 s per frame) alone on a quiet disk, about three times the Loop port's cost per frame: seven video layers under `backdrop-filter` blurs, all in software rendering.
+
+![Reel beats](images/showcase-hyperframes-reel-strip.jpg)
+
+The Motion Canvas "Loop" scene above was also rebuilt in HyperFrames, beat for beat, to race the two on identical content: [docs/09](09-hyperframes.md#head-to-head-the-loop-scene).
+
 ## Render cost
 
 | Route | Seconds per 1080p frame | Notes |
@@ -70,5 +88,6 @@ A typed title names the four routes; the skill's plan → block → look → pol
 | Godot (Movie Maker) | ≈ 0.33 | Mostly PNG writing |
 | Three.js (Playwright capture) | ≈ 0.08 | GPU WebGL |
 | Revideo | ≈ 0.024 | After about 4 s of startup |
+| HyperFrames | ≈ 0.05–0.19 | 0.05–0.07 on the Loop port, 0.19 on the Reel with footage and blurs, plus about 12 s of startup per command ([docs/09](09-hyperframes.md#render-cost)) |
 
 Long Cycles renders belong in the background while other work continues; that is how this showcase was produced.

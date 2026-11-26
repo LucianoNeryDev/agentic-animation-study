@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Warrior vs Dragon: a shadow play</title>
+    <script src="node_modules/gsap/dist/gsap.min.js"></script>
+    <!-- window.BAKE: every frame's shapes from ../choreo.py (generated, see BRIEF.md) -->
+    <script src="bake.js"></script>
+    <style>
+      @font-face { font-family: "Noto Serif Display"; font-style: italic; font-weight: 400; src: url("assets/fonts/NotoSerifDisplay-Italic.ttf"); }
+      @font-face { font-family: "Noto Serif Display"; font-style: italic; font-weight: 600; src: url("assets/fonts/NotoSerifDisplay-SemiBoldItalic.ttf"); }
+      :root { --hall: #0b0503; --cream: #f2dfb4; --gold: #d6a650; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--hall); }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--hall); }
+      /* the backlit paper screen sits inside the proscenium opening */
+      #stage, #soft, #shadows, #paper { position: absolute; left: 64px; top: 36px; width: 1792px; height: 1008px; }
+      #soft { opacity: 0.5; left: 58px; top: 32px; width: 1804px; height: 1018px; }
+      #paper { mix-blend-mode: multiply; }
+      #frame { position: absolute; left: 0; top: 0; }
+      .cap {
+        position: absolute; left: 200px; width: 1520px; top: 898px; text-align: center;
+        font-family: "Noto Serif Display", serif; font-style: italic; font-weight: 400;
+        font-size: 50px; line-height: 1.2; color: var(--cream); letter-spacing: 0.01em;
+        text-shadow: 0 0 18px rgba(255, 170, 80, 0.35); opacity: 0;
+      }
+      .cap b { font-weight: 600; color: var(--gold); font-size: 66px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="20"
+         data-fps="60" data-width="1920" data-height="1080">
+
+      <!-- the lamp-lit screen, the scenery and every puppet: drawn per frame from the bake -->
+      <canvas id="stage" class="clip" data-start="0" data-duration="20" data-track-index="0"
+              width="1792" height="1008"></canvas>
+      <!-- the puppets' soft penumbra: a quarter-size copy of the shadows, scaled up by the compositor -->
+      <canvas id="soft" class="clip" data-start="0" data-duration="20" data-track-index="4"
+              width="448" height="252"></canvas>
+      <!-- the shadows themselves: floor, puppets, dust and smoke -->
+      <canvas id="shadows" class="clip" data-start="0" data-duration="20" data-track-index="5"
+              width="1792" height="1008"></canvas>
+
+      <!-- paper: fine grain, mottling, fibres and two panel seams, multiplied over the screen -->
+      <svg id="paper" class="clip" data-start="0" data-duration="20" data-track-index="1"
+           width="1792" height="1008" viewBox="0 0 1792 1008">
+        <defs>
+          <filter id="paperTex" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="grain" />
+            <feColorMatrix in="grain" type="matrix" result="g"
+              values="0.34 0 0 0 0.72  0.34 0 0 0 0.69  0.34 0 0 0 0.63  0 0 0 0 1" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.0035 0.005" numOctaves="3" seed="11" result="mottle" />
+            <feColorMatrix in="mottle" type="matrix" result="m"
+              values="0.32 0 0 0 0.80  0.32 0 0 0 0.78  0.32 0 0 0 0.76  0 0 0 0 1" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.0015 0.32" numOctaves="1" seed="3" result="fibre" />
+            <feColorMatrix in="fibre" type="matrix" result="fb"
+              values="0.06 0 0 0 0.955  0.06 0 0 0 0.95  0.06 0 0 0 0.94  0 0 0 0 1" />
+            <feBlend in="g" in2="m" mode="multiply" result="gm" />
+            <feBlend in="gm" in2="fb" mode="multiply" />
+          </filter>
+          <radialGradient id="vig" cx="50%" cy="46%" r="72%">
+            <stop offset="0.55" stop-color="#ffffff" />
+            <stop offset="1" stop-color="#b79a86" />
+          </radialGradient>
+        </defs>
+        <rect width="1792" height="1008" filter="url(#paperTex)" />
+        <rect width="1792" height="1008" fill="url(#vig)" style="mix-blend-mode: multiply" />
+        <g stroke="#7a5638" stroke-opacity="0.28" stroke-width="2">
+          <line x1="597" y1="0" x2="597" y2="1008" />
+          <line x1="1195" y1="0" x2="1195" y2="1008" />
+        </g>
+      </svg>
+
+      <!-- proscenium: carved frame, valance and tied-back curtains (built once by the script) -->
+      <svg id="frame" class="clip" data-start="0" data-duration="20" data-track-index="2"
+           width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+
+      <!-- the storybook narration, one line per beat -->
+      <div id="cap-1" class="cap clip" data-start="0.1" data-duration="2.65" data-track-index="3"><b>A</b>t dusk, a lone warrior came to the ruins…</div>
+      <div id="cap-2" class="cap clip" data-start="2.8" data-duration="1.95" data-track-index="3">…and Ashfang fell from the sky.</div>
+      <div id="cap-3" class="cap clip" data-start="4.8" data-duration="2.8" data-track-index="3"><b>I</b>t roared, and breathed fire on his shield.</div>
+      <div id="cap-4" class="cap clip" data-start="7.7" data-duration="1.95" data-track-index="3"><b>H</b>e leapt, and cut its neck.</div>
+      <div id="cap-5" class="cap clip" data-start="9.75" data-duration="3.2" data-track-index="3"><b>C</b>law and fang came for him; he rose again.</div>
+      <div id="cap-6" class="cap clip" data-start="13.0" data-duration="1.7" data-track-index="3"><b>H</b>e slid beneath the fire.</div>
+      <div id="cap-7" class="cap clip" data-start="14.8" data-duration="2.95" data-track-index="3"><b>T</b>hen he leapt high, and drove his sword home.</div>
+      <div id="cap-8" class="cap clip" data-start="17.85" data-duration="2.15" data-track-index="3"><b>A</b>nd the valley was free.</div>
+    </div>
+
+    <!-- the drawer: reads window.BAKE and paints one frame; defines draw(t) and DUR -->
+    <script src="play.js"></script>
+    <script>
+      // ---------------------------------------------------------------- timeline
+      const proxy = { t: 0 };
+      const tl = gsap.timeline({ paused: true });
+      tl.to(proxy, { t: DUR, duration: DUR, ease: "none", onUpdate: () => draw(proxy.t) }, 0);
+      document.querySelectorAll(".cap").forEach((el) => {
+        const t0 = parseFloat(el.dataset.start), len = parseFloat(el.dataset.duration);
+        tl.fromTo(el, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, t0);
+        if (t0 + len < DUR - 0.01) tl.to(el, { opacity: 0, duration: 0.35, ease: "power1.in" }, t0 + len - 0.35);
+      });
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+      draw(0);
+    </script>
+  </body>
+</html>

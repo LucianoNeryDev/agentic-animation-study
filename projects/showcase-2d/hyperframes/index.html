@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Stick fight replay</title>
+    <script src="node_modules/gsap/dist/gsap.min.js"></script>
+    <script src="fight.js"></script>
+    <script src="sampler.js"></script>
+    <style>
+      @font-face { font-family: "Noto Sans"; font-weight: 700; src: url("assets/fonts/NotoSans-Bold.ttf"); }
+      @font-face { font-family: "Noto Sans Condensed"; font-weight: 700; src: url("assets/fonts/NotoSans-CondensedBold.ttf"); }
+      @font-face { font-family: "Noto Sans Condensed"; font-weight: 900; src: url("assets/fonts/NotoSans-CondensedBlack.ttf"); }
+      @font-face { font-family: "Noto Sans Condensed"; font-weight: 900; font-style: italic; src: url("assets/fonts/NotoSans-CondensedBlackItalic.ttf"); }
+      @font-face { font-family: "Noto Sans Display XC"; font-weight: 900; font-style: italic; src: url("assets/fonts/NotoSansDisplay-ExtraCondensedBlackItalic.ttf"); }
+      :root {
+        --navy: #0a0f2c; --navy2: #141b46; --ink: #ffffff; --gold: #ffcc1f; --gold2: #ff9d00;
+        --blue: #3b82f6; --blue-d: #1d4ed8; --red: #ef4444; --red-d: #b91c1c; --tele: #ffe94a;
+        --cond: "Noto Sans Condensed", "Noto Sans", sans-serif; --xc: "Noto Sans Display XC", "Noto Sans Condensed", sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #05060f; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      #stage { position: absolute; inset: 0; overflow: hidden; }
+      .layer { position: absolute; inset: 0; }
+
+      /* ------------------------------------------------ the arena (behind the fighters) */
+      #cam { position: absolute; inset: 0; transform-origin: 0 0; }
+      #wall { position: absolute; left: -900px; top: -80px; width: 3900px; height: 900px;
+        background:
+          radial-gradient(ellipse 30% 40% at 50% 0%, #2a2466 0%, transparent 70%),
+          linear-gradient(#070a1e 0%, #0d1236 55%, #151a45 100%); }
+      #truss { position: absolute; left: 0; right: 0; top: 104px; height: 26px;
+        background: radial-gradient(circle, #fff6d8 0 5px, #ffcf7a66 7px, transparent 12px) 0 0 / 120px 26px;
+        filter: blur(0.6px); }
+      #crowd { position: absolute; left: 0; right: 0; top: 330px; height: 420px;
+        background:
+          radial-gradient(circle at 50% 30%, #3a3f74 0 12px, transparent 13px) 0 0 / 46px 54px,
+          radial-gradient(ellipse 22px 30px at 50% 95%, #2a2e5c 0 100%, transparent 100%) 0 0 / 46px 54px,
+          radial-gradient(circle at 50% 30%, #2c3062 0 13px, transparent 14px) 23px 27px / 46px 54px,
+          radial-gradient(ellipse 22px 30px at 50% 95%, #20244b 0 100%, transparent 100%) 23px 27px / 46px 54px;
+        -webkit-mask-image: linear-gradient(transparent 0%, #000 35%, #000 100%);
+        mask-image: linear-gradient(transparent 0%, #000 35%, #000 100%); opacity: 0.85; }
+      #flashes { position: absolute; left: 0; right: 0; top: 330px; height: 420px; }
+      .pf { position: absolute; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; opacity: 0;
+        background: radial-gradient(circle, #fff 0 5%, #fffc 10%, #fff5 22%, transparent 60%); mix-blend-mode: screen; }
+      #board { position: absolute; left: -900px; width: 3900px; top: 704px; height: 76px; overflow: hidden;
+        background: linear-gradient(90deg, #13205e, #2a1660 40%, #13205e 80%); border-top: 3px solid #4b5bd6; border-bottom: 3px solid #090c22; }
+      #board .run { position: absolute; left: 0; top: 10px; white-space: nowrap; font: italic 900 46px/52px var(--cond);
+        letter-spacing: 6px; color: transparent; background: linear-gradient(90deg, #7dd3fc, #fff 30%, #fbbf24 60%, #7dd3fc);
+        -webkit-background-clip: text; background-clip: text; opacity: 0.45; }
+      #mat { position: absolute; left: -200px; right: -200px; top: 780px; height: 200px;
+        background: linear-gradient(#4a5488 0%, #3a4374 40%, #2a3159 100%); }
+      #apron { position: absolute; left: -200px; right: -200px; top: 980px; height: 200px;
+        background: linear-gradient(#0d1030, #05060f); border-top: 4px solid #e5e7eb33; }
+      svg { display: block; overflow: visible; }
+      /* light: cones and a pool, blended over the arena with screen */
+      .beam { position: absolute; top: -60px; width: 760px; height: 1000px; margin-left: -380px; mix-blend-mode: screen;
+        background: linear-gradient(#fff2cc55, #fff2cc12 70%, transparent);
+        clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+        mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+      #pool { position: absolute; left: 260px; top: 700px; width: 1400px; height: 340px; mix-blend-mode: screen;
+        background: radial-gradient(ellipse 50% 50% at 50% 50%, #ffe9b855 0%, #ffe9b81c 45%, transparent 70%); }
+      #haze { mix-blend-mode: screen; background:
+          radial-gradient(ellipse 40% 30% at 30% 35%, #6d5bd012, transparent),
+          radial-gradient(ellipse 35% 25% at 75% 40%, #3b82f612, transparent); }
+      #vignette { background: radial-gradient(ellipse 75% 70% at 50% 52%, transparent 55%, #000a 100%); mix-blend-mode: multiply; }
+      #flash { opacity: 0; mix-blend-mode: screen; background: radial-gradient(circle at var(--fx, 50%) var(--fy, 45%), #ffffff 0%, #fff6c8 10%, #ffffff30 30%, transparent 60%); }
+
+      /* ------------------------------------------------ broadcast graphics (screen space) */
+      .gfx { font-family: var(--cond); color: var(--ink); }
+      #bug { position: absolute; left: 72px; top: 56px; height: 64px; display: flex; align-items: stretch;
+        box-shadow: 0 12px 30px #0009; border-radius: 4px; overflow: hidden; }
+      #bug .league { display: flex; align-items: center; padding: 0 18px; color: #12121a;
+        font: italic 900 34px/1 var(--cond); background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+      #bug .side { display: flex; align-items: center; gap: 14px; background: #0a0f2cee; font: 700 32px/1 var(--cond); }
+      #bug .side.blue { padding-right: 16px; } #bug .side.red { padding-left: 16px; }
+      #bug .chip { width: 10px; align-self: stretch; }
+      #bug .blue .chip { background: var(--blue); } #bug .red .chip { background: var(--red); }
+      #bug .pts { min-width: 52px; padding: 6px 8px; text-align: center; background: #ffffff1a; border-radius: 3px;
+        font-variant-numeric: tabular-nums; font-weight: 900; }
+      #bug .clock { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 112px;
+        background: #fff; color: var(--navy); line-height: 1; }
+      #bug .clock .rd { font: 700 20px/1 var(--cond); letter-spacing: 3px; }
+      #bug .clock #clock { font: 900 32px/1.05 var(--cond); font-variant-numeric: tabular-nums; }
+      #bug .clock.final { background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+
+      #replay { position: absolute; right: 72px; top: 56px; height: 64px; display: flex; align-items: center; gap: 14px;
+        padding: 0 22px 0 18px; background: var(--red); font: italic 900 38px/1 var(--cond); letter-spacing: 4px;
+        box-shadow: 0 12px 30px #0009; border-radius: 4px; }
+      #replay .rw { display: flex; } #replay .rw i { width: 0; height: 0; border: 13px solid transparent;
+        border-right: 18px solid #fff; border-left: 0; }
+      #slomo { position: absolute; right: 72px; top: 132px; height: 48px; display: flex; align-items: center; gap: 12px;
+        padding: 0 18px; color: var(--navy); font: 900 28px/1 var(--cond); letter-spacing: 3px; border-radius: 4px;
+        background: repeating-linear-gradient(-45deg, var(--gold) 0 18px, #ffd955 18px 36px); background-size: 51px 51px; }
+      #slomo .x { font-variant-numeric: tabular-nums; background: var(--navy); color: var(--gold); padding: 4px 8px; border-radius: 3px; }
+
+      .call { position: absolute; left: 92px; top: 150px; display: flex; align-items: center; gap: 22px;
+        font: italic 900 128px/1 var(--xc); letter-spacing: 1px; white-space: nowrap; text-shadow: 0 7px 0 #05071a; }
+      .call .ch { display: inline-block; }
+      /* the highlight box is skewed; its word is skewed back upright */
+      .call .box { padding: 4px 26px 10px 22px; color: var(--navy); text-shadow: none; transform: skewX(-14deg);
+        background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+      .call .box > .split { display: inline-block; transform: skewX(14deg); }
+      .call .box.blue { background: linear-gradient(135deg, #60a5fa, var(--blue-d)); }
+      .call .box.blue { color: #fff; }
+      .call .dash { color: #ffffffb0; }
+      #callUpper { font-size: 168px; }
+      /* gradient per letter: background-clip: text on the parent does not reach children that carry their own transforms */
+      #callUpper .word { padding-right: 12px; text-shadow: none; filter: drop-shadow(0 7px 0 #05071a); }
+      #callUpper .ch { color: transparent; background: linear-gradient(180deg, #fff 10%, var(--gold) 55%, var(--gold2) 90%);
+        -webkit-background-clip: text; background-clip: text; padding-right: 0.06em; margin-right: -0.06em; }
+
+      .strap { position: absolute; bottom: 64px; display: flex; height: 112px; box-shadow: 0 14px 34px #000a; }
+      .strap.left { left: 72px; } .strap.right { right: 72px; flex-direction: row-reverse; }
+      .strap .accent { width: 16px; }
+      .strap.blue .accent { background: linear-gradient(var(--blue), var(--blue-d)); }
+      .strap.red .accent { background: linear-gradient(var(--red), var(--red-d)); }
+      .strap.gold .accent { background: linear-gradient(var(--gold), var(--gold2)); }
+      .strap .body { display: flex; flex-direction: column; }
+      .strap.right .body { align-items: flex-end; }
+      .strap .top { display: flex; align-items: baseline; gap: 18px; padding: 8px 26px 4px; background: #fff; color: var(--navy); height: 70px; }
+      .strap .name { font: 900 56px/1 var(--cond); letter-spacing: 1px; }
+      .strap .rec { font: 700 30px/1 var(--cond); color: #4b5563; font-variant-numeric: tabular-nums; }
+      .strap .sub { padding: 0 26px; height: 42px; display: flex; align-items: center; background: #0a0f2cf0;
+        font: 700 24px/1 var(--cond); letter-spacing: 4px; color: #dbe4ff; }
+      .strap.right .top { flex-direction: row-reverse; }
+
+      #ko { position: absolute; left: 0; right: 0; top: 150px; display: flex; justify-content: center; pointer-events: none; }
+      #ko .slab { position: relative; padding: 0 70px; }
+      #ko .bar { position: absolute; inset: 34px 0 26px; transform: skewX(-14deg);
+        background: linear-gradient(90deg, transparent, #b91c1ccc 18%, #ef4444ee 50%, #b91c1ccc 82%, transparent); }
+      #ko .txt { position: relative; font: italic 900 260px/1 var(--xc); letter-spacing: 8px; color: transparent;
+        background: linear-gradient(180deg, #ffffff 15%, #ffe680 50%, var(--gold2) 85%);
+        -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 10px 0 #7f1d1d); }
+
+      #stinger { position: absolute; inset: 0; overflow: hidden; }
+      #stinger .band { position: absolute; top: -10%; height: 120%; left: -35%; width: 170%; transform: skewX(-18deg); }
+      #stinger .b3 { background: linear-gradient(90deg, var(--red-d), var(--red)); }
+      #stinger .b2 { background: linear-gradient(90deg, #f8fafc, #c7d2fe); }
+      #stinger .b1 { background: radial-gradient(ellipse 60% 70% at 50% 50%, #1e2a78, var(--navy) 70%); }
+      #stinger .logo { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 6px; }
+      #stinger .mark { display: flex; align-items: center; gap: 26px; font: italic 900 190px/1 var(--xc); letter-spacing: 14px; color: #fff; }
+      #stinger .mark .rw { display: flex; } #stinger .mark .rw i { width: 0; height: 0; border: 52px solid transparent;
+        border-right: 70px solid var(--red); border-left: 0; }
+      #stinger .sub { font: 700 38px/1 var(--cond); letter-spacing: 18px; color: var(--gold); padding-left: 18px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.5"
+         data-fps="60" data-width="1920" data-height="1080">
+      <div id="stage" class="clip" data-start="0" data-duration="4.5" data-track-index="0">
+        <!-- Everything inside #cam is the "camera feed": shake and the replay zoom move it as one. -->
+        <div id="cam">
+          <div id="wall"><div id="truss"></div><div id="crowd"></div><div id="flashes"></div></div>
+          <div id="beams" class="layer"></div>
+          <div id="board"><div class="run" id="boardRun" data-layout-ignore aria-hidden="true"></div></div>
+          <div id="mat"></div>
+          <div id="apron"></div>
+          <div id="pool"></div>
+          <svg id="ropes" class="layer" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="ropesG"></g></svg>
+          <!-- World space: x right, ground at y = 870, 260 px per unit; #worldG carries the shared camera pan. -->
+          <svg id="world" class="layer" width="1920" height="1080" viewBox="0 0 1920 1080">
+            <defs>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="b" />
+                <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <g id="worldG">
+              <g id="matMarks"></g>
+              <g id="shadows"></g>
+              <g id="dust"></g>
+              <g id="trails"></g>
+              <g id="fighters"></g>
+              <g id="impacts"></g>
+              <g id="tele" filter="url(#glow)"></g>
+            </g>
+          </svg>
+          <div id="haze" class="layer"></div>
+        </div>
+        <div id="flash" class="layer"></div>
+        <div id="vignette" class="layer"></div>
+
+        <!-- Broadcast graphics: HTML and CSS, laid out by the browser. -->
+        <div class="gfx layer">
+          <div id="bug">
+            <div class="league">SFL</div>
+            <div class="side blue"><span class="chip"></span><span>BLUE</span><span class="pts" id="ptsBlue">14</span></div>
+            <div class="clock" id="clockBox"><span class="rd" id="rd">RD 3</span><span id="clock">1:08</span></div>
+            <div class="side red"><span class="pts" id="ptsRed">11</span><span>RED</span><span class="chip"></span></div>
+          </div>
+          <div id="replay"><span class="rw"><i></i><i></i></span>REPLAY</div>
+          <div id="slomo"><span>SUPER SLO-MO</span><span class="x">×4</span></div>
+
+          <div class="call" id="callJab"><span class="split">JAB</span><span class="dash">—</span><span class="box"><span class="split">BLOCKED</span></span></div>
+          <div class="call" id="callKick"><span class="split">KICK</span><span class="dash">—</span><span class="box blue"><span class="split">DUCKED</span></span></div>
+          <div class="call" id="callUpper"><span class="word split">UPPERCUT!</span></div>
+
+          <div class="strap left blue" id="strapBlue"><div class="accent"></div><div class="body">
+            <div class="top"><span class="name">BLUE</span><span class="rec">12–1–0</span></div>
+            <div class="sub">BLUE CORNER · SOUTHPAW</div></div></div>
+          <div class="strap right red" id="strapRed"><div class="accent"></div><div class="body">
+            <div class="top"><span class="name">RED</span><span class="rec">10–3–0</span></div>
+            <div class="sub">RED CORNER · KICKBOXER</div></div></div>
+          <div class="strap left gold" id="strapWin"><div class="accent"></div><div class="body">
+            <div class="top"><span class="name">BLUE WINS</span><span class="rec">BY K.O.</span></div>
+            <div class="sub">UPPERCUT · ROUND 3 · 1:05</div></div></div>
+
+          <div id="ko"><div class="slab"><div class="bar"></div><div class="txt">K.O.</div></div></div>
+
+          <div id="stinger">
+            <div class="band b3"></div><div class="band b2"></div><div class="band b1"></div>
+            <div class="logo"><div class="mark"><span class="rw"><i></i><i></i></span>REPLAY</div><div class="sub">STICK FIGHT LEAGUE</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ------------------------------------------------------------------ shared choreography
+      const F = window.Fight, FIGHT = F.FIGHT;
+      const FPS = 60, DUR = FIGHT.duration, PX = FIGHT.view.px_per_unit, GY = 540 + FIGHT.view.ground_below_center_px;
+      const toPx = (p) => [p[0] * PX, GY - p[1] * PX];
+      const HITS = FIGHT.events.filter((e) => e.type === "hit");
+      const TRAILS = FIGHT.events.filter((e) => e.type === "trail");
+      const DUSTS = FIGHT.events.filter((e) => e.type === "dust");
+      const KO = FIGHT.events.find((e) => e.type === "ko");
+      const JAB = HITS[0], UPPER = HITS.find((h) => h.power >= 1);
+      const KICK_T = FIGHT.fighters.red.keys.find((k) => k.pose === "kick").t;
+      const LAND = DUSTS[0].t;
+      const limbAt = (by, limb, t) => F.skeleton(by, t)[F.LIMB[limb]];
+      const clamp01 = (u) => Math.max(0, Math.min(1, u));
+      const win = (t, t0, len) => (t < t0 || t > t0 + len ? -1 : (t - t0) / len);
+      const outCubic = (u) => 1 - (1 - u) ** 3;
+
+      // Seeded PRNG (mulberry32): crowd flashes and the telestrator wobble repeat on every render.
+      function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+      const NS = "http://www.w3.org/2000/svg";
+      const $ = (id) => document.getElementById(id);
+      const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag);
+        for (const k in attrs) n.setAttribute(k, attrs[k]); parent.appendChild(n); return n; };
+      const pts = (list) => list.map((p) => toPx(p).map((v) => v.toFixed(2)).join(",")).join(" ");
+
+      // ------------------------------------------------------------------ camera: shared pan + look-only shake and replay zoom
+      /** Shake in px, as in the Motion Canvas route: decays over 0.4 s after each hit, seeded by frame. */
+      function shake(t) {
+        let a = 0;
+        for (const e of HITS) { const u = win(t, e.t, 0.4); if (u >= 0) a = Math.max(a, 0.09 * e.power * PX * (1 - u)); }
+        const f = Math.round(t * FPS), n = (k) => (Math.sin(f * 12.9898 + k * 78.233) * 43758.5453) % 1;
+        return [a * n(1), a * n(2)];
+      }
+      /** Replay zoom on the uppercut: 1 → 1.14 into the hit-stop, held, eased back; centred on the fist on screen. */
+      function zoom(t) {
+        const inU = win(t, UPPER.t, 0.06), outU = win(t, UPPER.t + UPPER.stop, 0.6);
+        let k = 0;
+        if (inU >= 0) k = outCubic(inU); else if (t > UPPER.t && t < UPPER.t + UPPER.stop) k = 1; else if (outU >= 0) k = 1 - outCubic(outU);
+        const w = toPx(limbAt(UPPER.by, UPPER.limb, UPPER.t));
+        return { s: 1 + 0.14 * k, at: [w[0] - F.camX(t) * PX + 960, w[1]] };
+      }
+
+      // ------------------------------------------------------------------ build: arena
+      const beams = [-1.5, 1.1, 3.6].map((x) => { const d = document.createElement("div"); d.className = "beam"; $("beams").appendChild(d); return { d, x }; });
+      $("boardRun").textContent = "STICK FIGHT LEAGUE ✦ ROUND 3 ✦ ".repeat(8);
+      // far ropes and posts, a parallax layer at 0.85 of the world's speed
+      const ROPE_F = 0.85, POSTS = [-3.4, 5.6];
+      const ropesG = $("ropesG");
+      [["#ef4444", 560], ["#f8fafc", 640], ["#3b82f6", 720]].forEach(([c, y]) => {
+        const [x0, x1] = POSTS.map((x) => x * PX * ROPE_F);
+        el("path", { d: `M${x0} ${y} Q${(x0 + x1) / 2} ${y + 26} ${x1} ${y}`, fill: "none", stroke: c, "stroke-width": 6, opacity: 0.55 }, ropesG);
+      });
+      POSTS.forEach((x) => {
+        el("rect", { x: x * PX * ROPE_F - 14, y: 520, width: 28, height: 270, rx: 6, fill: "#1f2547" }, ropesG);
+        el("rect", { x: x * PX * ROPE_F - 20, y: 540, width: 40, height: 200, rx: 10, fill: x < 0 ? "#1d4ed8" : "#b91c1c" }, ropesG);
+      });
+      // centre-ring logo painted on the mat, in world space
+      const mm = $("matMarks");
+      el("ellipse", { cx: 1.1 * PX, cy: GY + 12, rx: 330, ry: 58, fill: "none", stroke: "#ffffff22", "stroke-width": 8 }, mm);
+      const logo = el("text", { x: 1.1 * PX, y: GY + 34, "text-anchor": "middle", "font-size": 92, "font-weight": 900, "font-style": "italic",
+        "font-family": "Noto Sans Condensed", fill: "#ffffff1a", "data-layout-ignore": "", "aria-hidden": "true", transform: `translate(0 ${GY + 34}) scale(1 0.42) translate(0 ${-(GY + 34)})` }, mm);
+      logo.textContent = "SFL";
+
+      // photographers' flashes in the crowd after the K.O.: seeded positions and times
+      const rnd = rng(2026);
+      const FLASHES = Array.from({ length: 18 }, () => ({ x: -500 + rnd() * 3200, y: 120 + rnd() * 240, t: KO.t + 0.04 + rnd() * 1.25 }));
+      FLASHES.forEach((f) => { const d = document.createElement("div"); d.className = "pf";
+        d.style.left = `${f.x}px`; d.style.top = `${f.y}px`; $("flashes").appendChild(d); f.d = d; });
+
+      // ------------------------------------------------------------------ build: fighters and effects (SVG, world space)
+      const COLOR = { blue: { front: "#4f8cff", back: "#2457c9" }, red: { front: "#ff4d55", back: "#b4232b" } };
+      const FIG = {};
+      for (const name of ["red", "blue"]) {
+        const c = COLOR[name];
+        const shadow = el("ellipse", { cy: GY + 6, ry: 15, fill: "#000", opacity: 0.4 }, $("shadows"));
+        const g = el("g", { "stroke-linecap": "round", "stroke-linejoin": "round", fill: "none" }, $("fighters"));
+        const lines = [0, 1, 2, 3, 4].map(() => el("polyline", {}, g));
+        const head = el("circle", { r: FIGHT.bones.head * PX, fill: c.front }, g);
+        FIG[name] = { shadow, lines, head, c };
+      }
+      const trails = TRAILS.map((e) => ({ e, wide: el("polyline", { fill: "none", stroke: COLOR[e.by].front, "stroke-width": 34,
+        "stroke-linecap": "round", "stroke-linejoin": "round" }, $("trails")), core: el("polyline", { fill: "none", stroke: "#fff",
+        "stroke-width": 7, "stroke-linecap": "round", "stroke-linejoin": "round" }, $("trails")) }));
+      const impacts = HITS.map((e) => {
+        const [x, y] = toPx(limbAt(e.by, e.limb, e.t)), g = el("g", { transform: `translate(${x} ${y})` }, $("impacts"));
+        return { e, ring: el("circle", { fill: "none", stroke: "#fff" }, g), core: el("circle", { fill: "#fff7cc" }, g),
+          sparks: Array.from({ length: 10 }, (_, i) => ({ a: (i / 10) * Math.PI * 2 + 0.3, l: el("line", { stroke: "#ffe27a", "stroke-width": 7, "stroke-linecap": "round" }, g) })) };
+      });
+      const dusts = DUSTS.map((e) => ({ e, x: toPx([F.skeleton(e.on, e.t).hip[0], 0])[0],
+        puffs: Array.from({ length: 6 }, (_, i) => el("circle", { fill: "#8e96c4" }, $("dust"))) }));
+
+      // ------------------------------------------------------------------ build: telestrator (world space, so marks stick to the action)
+      const tele = $("tele");
+      const TELE = { stroke: "#ffe94a", "stroke-width": 9, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" };
+      const pathD = (list) => "M" + list.map((p) => p.map((v) => v.toFixed(1)).join(" ")).join(" L");
+      // 1: a hand-drawn loop round the contact (fist and chin), a little more than one turn, as an analyst draws it
+      const fist = limbAt("blue", "hf", UPPER.t), chin = F.skeleton("red", UPPER.t).head;
+      const cc = toPx([(fist[0] + chin[0]) / 2, (fist[1] + chin[1]) / 2]);
+      const wob = rng(7);
+      const ph = [wob() * 6, wob() * 6];
+      const loop = Array.from({ length: 73 }, (_, i) => {
+        const u = i / 72, a = -2.3 + u * Math.PI * 2 * 1.12, r = 128 * (1 + 0.05 * Math.sin(2 * a + ph[0]) + 0.03 * Math.sin(3 * a + ph[1]) - 0.06 * u);
+        return [cc[0] + r * Math.cos(a), cc[1] + 0.86 * r * Math.sin(a)];
+      });
+      // 2: Red's launch, traced over his hip path (sampled from the same sampler), lifted so it arcs above him
+      const arc = [];
+      // the lift shrinks from 0.95 to 0.4 units along the way, so the arrow ends pointing at the landing spot
+      const A0 = UPPER.t + UPPER.stop + 0.04, A1 = LAND - 0.02;
+      for (let t = A0; t <= A1; t += 1 / 120) { const h = F.skeleton("red", t).hip, u = (t - A0) / (A1 - A0);
+        arc.push(toPx([h[0] + 0.1, h[1] + 0.95 - 0.55 * u * u])); }
+      const end = arc[arc.length - 1], prev = arc[arc.length - 6];
+      const ang = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
+      const head = [[end[0] + 52 * Math.cos(ang + 2.55), end[1] + 52 * Math.sin(ang + 2.55)], end, [end[0] + 52 * Math.cos(ang - 2.55), end[1] + 52 * Math.sin(ang - 2.55)]];
+      // 3: an X where he will land
+      const lx = toPx([F.skeleton("red", LAND).hip[0], 0])[0], X = 34;
+      const marks = [
+        { d: pathD(loop), t: UPPER.t + 0.01, dur: 0.17 },
+        { d: pathD(arc), t: UPPER.t + UPPER.stop + 0.02, dur: 0.5 },
+        { d: pathD(head), t: UPPER.t + UPPER.stop + 0.52, dur: 0.07 },
+        { d: pathD([[lx - X, GY + 30 - X * 0.5], [lx + X, GY + 30 + X * 0.5]]), t: LAND - 0.16, dur: 0.05 },
+        { d: pathD([[lx + X, GY + 30 - X * 0.5], [lx - X, GY + 30 + X * 0.5]]), t: LAND - 0.1, dur: 0.05 },
+      ].map((m) => { const p = el("path", { d: m.d, ...TELE }, tele); const L = p.getTotalLength();
+        p.setAttribute("stroke-dasharray", `${L + 2} ${L + 2}`); p.setAttribute("stroke-dashoffset", L + 2); return { ...m, p, L }; });
+      const pen = el("circle", { r: 11, fill: "#fffbe0", opacity: 0 }, tele);
+
+      // ------------------------------------------------------------------ per-frame draw: a pure function of t
+      function draw(t) {
+        const cam = F.camX(t), [sx, sy] = shake(t), z = zoom(t);
+        // camera feed: zoom about the fist, then shake (CSS transform on the whole arena + world)
+        $("cam").style.transform = `translate(${(sx - z.at[0] * (z.s - 1)).toFixed(2)}px, ${(sy - z.at[1] * (z.s - 1)).toFixed(2)}px) scale(${z.s.toFixed(4)})`;
+        $("worldG").setAttribute("transform", `translate(${(960 - cam * PX).toFixed(2)} 0)`);
+        $("ropesG").setAttribute("transform", `translate(${(960 - cam * PX * ROPE_F).toFixed(2)} 0)`);
+        $("wall").style.transform = `translateX(${(-cam * PX * 0.35).toFixed(2)}px)`;
+        $("board").style.transform = `translateX(${(-cam * PX * 0.6).toFixed(2)}px)`;
+        beams.forEach((b) => (b.d.style.left = `${(960 + (b.x - cam) * PX * 0.7).toFixed(1)}px`));
+
+        for (const name in FIG) {
+          const j = F.skeleton(name, t), f = FIG[name];
+          F.strokes(j).forEach(([part, list], i) => {
+            const L = f.lines[i];
+            L.setAttribute("points", pts(list));
+            L.setAttribute("stroke", part === "back" ? f.c.back : f.c.front);
+            L.setAttribute("stroke-width", part === "back" ? 15 : 19);
+          });
+          const [hx, hy] = toPx(j.head);
+          f.head.setAttribute("cx", hx.toFixed(2)); f.head.setAttribute("cy", hy.toFixed(2));
+          f.shadow.setAttribute("cx", (j.hip[0] * PX).toFixed(2));
+          f.shadow.setAttribute("rx", (PX * Math.max(0.25, 0.75 - 0.25 * Math.max(0, j.hip[1] - 0.4))).toFixed(2));
+        }
+        for (const { e, wide, core } of trails) {
+          const on = t >= e.t && t <= e.until + 0.08, end = Math.min(t, e.until);
+          const list = on ? Array.from({ length: 9 }, (_, k) => limbAt(e.by, e.limb, Math.max(e.t, end - k * 0.018))) : [[0, -9], [0, -9]];
+          const fade = t < e.t ? 0 : 1 - clamp01((t - e.until) / 0.08);
+          wide.setAttribute("points", pts(list)); core.setAttribute("points", pts(list));
+          wide.setAttribute("opacity", (0.25 * fade).toFixed(3)); core.setAttribute("opacity", (0.6 * fade).toFixed(3));
+        }
+        for (const { e, ring, core, sparks } of impacts) {
+          const u = win(t, e.t, 0.34), p = e.power, on = u >= 0;
+          ring.setAttribute("r", on ? (260 * p * outCubic(u)).toFixed(1) : 0);
+          ring.setAttribute("stroke-width", on ? (14 * (1 - u)).toFixed(2) : 0);
+          ring.setAttribute("opacity", on ? (1 - u).toFixed(3) : 0);
+          core.setAttribute("r", on ? (46 * p * (1 - u)).toFixed(1) : 0);
+          for (const s of sparks) {
+            const r0 = 70 * p + 150 * p * outCubic(Math.max(0, u)), r1 = r0 + 90 * p * (1 - Math.max(0, u));
+            s.l.setAttribute("x1", (r0 * Math.cos(s.a)).toFixed(1)); s.l.setAttribute("y1", (r0 * Math.sin(s.a)).toFixed(1));
+            s.l.setAttribute("x2", (r1 * Math.cos(s.a)).toFixed(1)); s.l.setAttribute("y2", (r1 * Math.sin(s.a)).toFixed(1));
+            s.l.setAttribute("opacity", on ? 1 - u : 0);
+          }
+        }
+        for (const { e, x, puffs } of dusts) {
+          const u = win(t, e.t, 0.45);
+          puffs.forEach((c, i) => {
+            const side = i % 2 ? -1 : 1, k = 1 + Math.floor(i / 2), v = outCubic(clamp01(u));
+            c.setAttribute("r", u < 0 ? 0 : ((13 + 7 * k) * e.power * (0.5 + v)).toFixed(1));
+            c.setAttribute("cx", (x + side * (60 + 70 * k * v) * e.power).toFixed(1));
+            c.setAttribute("cy", (GY - 16 - 20 * k * v).toFixed(1));
+            c.setAttribute("opacity", u < 0 ? 0 : (0.75 * (1 - u)).toFixed(3));
+          });
+        }
+        // pen tip: rides whichever telestrator stroke is being drawn
+        const live = marks.find((m) => t >= m.t && t <= m.t + m.dur);
+        if (live) { const q = live.p.getPointAtLength(live.L * clamp01((t - live.t) / live.dur));
+          pen.setAttribute("cx", q.x.toFixed(1)); pen.setAttribute("cy", q.y.toFixed(1)); pen.setAttribute("opacity", 1); }
+        else pen.setAttribute("opacity", 0);
+        // uppercut flash, centred on the fist on screen
+        const fu = win(t, UPPER.t, 0.1);
+        $("flash").style.opacity = fu < 0 ? 0 : (0.6 * (1 - fu) ** 2).toFixed(3);
+        $("flash").style.setProperty("--fx", `${z.at[0].toFixed(0)}px`); $("flash").style.setProperty("--fy", `${z.at[1].toFixed(0)}px`);
+        // scoreboard: the clock runs down in real time and stops at the K.O.; Blue's strike count ticks on the uppercut
+        const left = Math.ceil(68 - Math.min(t, KO.t) - 1e-9);
+        $("clock").textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+        $("rd").textContent = t >= KO.t ? "K.O." : "RD 3";
+        $("clockBox").classList.toggle("final", t >= KO.t);
+        $("ptsBlue").textContent = t >= UPPER.t ? 15 : 14;
+      }
+
+      // ------------------------------------------------------------------ timeline
+      const tl = gsap.timeline({ paused: true });
+      const clock = { t: 0 };
+      tl.to(clock, { t: DUR, duration: DUR, ease: "none", onUpdate: () => draw(clock.t) }, 0);
+
+      // REPLAY stinger: covers frame 0, then the bands wipe off to the right
+      tl.fromTo("#stinger .logo", { scale: 1, autoAlpha: 1 }, { scale: 1.18, autoAlpha: 0, duration: 0.18, ease: "power2.in" }, 0.08);
+      ["#stinger .b1", "#stinger .b2", "#stinger .b3"].forEach((s, i) =>
+        tl.fromTo(s, { xPercent: 0 }, { xPercent: 110, duration: 0.32, ease: "power2.inOut" }, 0.06 + i * 0.05));
+      tl.set("#stinger", { autoAlpha: 0 }, 0.52);
+
+      // scoreboard bug and replay tag slide in as the stinger clears
+      tl.fromTo("#bug", { x: -40, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.25, ease: "power3.out" }, 0.3);
+      tl.fromTo("#replay", { x: 40, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.25, ease: "power3.out" }, 0.34);
+      // strike counter pop
+      tl.fromTo("#ptsBlue", { backgroundColor: "#ffffff1a", color: "#ffffff" },
+        { backgroundColor: "#ffcc1f", color: "#0a0f2c", duration: 0.05, ease: "none" }, UPPER.t);
+      tl.to("#ptsBlue", { backgroundColor: "#ffffff1a", color: "#ffffff", duration: 0.5, ease: "power1.in" }, UPPER.t + 0.5);
+      tl.fromTo("#clockBox", { scale: 1 }, { scale: 1.12, duration: 0.08, yoyo: true, repeat: 1, ease: "power2.out" }, KO.t);
+
+      // name straps: wipe in with clip-path, text follows
+      function strapIn(id, at, dir) {
+        tl.fromTo(id, { clipPath: dir > 0 ? "inset(0 100% 0 0%)" : "inset(0 0% 0 100%)" },
+          { clipPath: "inset(0 0% 0 0%)", duration: 0.24, ease: "power3.out", immediateRender: false }, at);
+        tl.fromTo(`${id} .name`, { x: -dir * 50, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.22, ease: "power3.out" }, at + 0.06);
+        tl.fromTo(`${id} .sub`, { x: -dir * 30, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.22, ease: "power3.out" }, at + 0.1);
+      }
+      function strapOut(id, at, dir) {
+        tl.to(id, { clipPath: dir > 0 ? "inset(0 100% 0 0%)" : "inset(0 0% 0 100%)", duration: 0.16, ease: "power2.in" }, at);
+      }
+      // straps start fully clipped (not hidden), so every seek path reaches the same state
+      gsap.set(["#strapBlue", "#strapWin"], { clipPath: "inset(0 100% 0 0%)" });
+      gsap.set("#strapRed", { clipPath: "inset(0 0% 0 100%)" });
+      strapIn("#strapBlue", 0.32, 1); strapIn("#strapRed", 0.4, -1);
+      strapOut("#strapBlue", 1.16, 1); strapOut("#strapRed", 1.2, -1);
+      strapIn("#strapWin", KO.t + 0.4, 1);
+
+      // kinetic captions: letters drop in with a stagger; the highlight box wipes in behind its word
+      document.querySelectorAll(".split").forEach((s) => {
+        const txt = s.textContent; s.textContent = "";
+        for (const ch of txt) { const c = document.createElement("span"); c.className = "ch"; c.textContent = ch; s.appendChild(c); }
+      });
+      function call(id, at, out, stagger = 0.018) {
+        gsap.set(id, { autoAlpha: 0 });
+        tl.set(id, { autoAlpha: 1, x: 0 }, at);
+        const has = (sel) => document.querySelector(id + " " + sel);
+        tl.fromTo(`${id} .ch`, { yPercent: 70, skewX: -18, autoAlpha: 0 },
+          { yPercent: 0, skewX: 0, autoAlpha: 1, duration: 0.12, stagger, ease: "back.out(2.2)" }, at);
+        if (has(".dash")) tl.fromTo(`${id} .dash`, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.06 }, at + 0.06);
+        if (has(".box")) tl.fromTo(`${id} .box`, { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.12, ease: "power3.out" }, at + 0.07);
+        tl.to(id, { x: -70, autoAlpha: 0, duration: 0.1, ease: "power2.in" }, out);
+      }
+      call("#callJab", JAB.t, 1.34);
+      call("#callKick", KICK_T - 0.03, UPPER.t - 0.18);
+      call("#callUpper", UPPER.t, 2.8, 0.024);
+      tl.fromTo("#callUpper .word", { scale: 1.25 }, { scale: 1, duration: 0.25, ease: "power3.out", transformOrigin: "0% 50%" }, UPPER.t);
+
+      // slow-motion label over both hit-stops; the stripes scroll
+      gsap.set("#slomo", { autoAlpha: 0 });
+      [[JAB.t, JAB.t + JAB.stop + 0.24], [UPPER.t - 0.02, 2.62]].forEach(([a, b]) => {
+        tl.fromTo("#slomo", { autoAlpha: 0, y: -12 }, { autoAlpha: 1, y: 0, duration: 0.06, immediateRender: false }, a);
+        tl.to("#slomo", { autoAlpha: 0, duration: 0.08 }, b);
+      });
+      tl.fromTo("#slomo", { backgroundPosition: "0px 0px" }, { backgroundPosition: "204px 0px", duration: DUR, ease: "none" }, 0);
+
+      // telestrator: strokes draw on (dash offset), then the marks fade before the K.O.
+      marks.forEach((m) => tl.fromTo(m.p, { attr: { "stroke-dashoffset": m.L + 2 } },
+        { attr: { "stroke-dashoffset": 0 }, duration: m.dur, ease: "none", immediateRender: false }, m.t));
+      tl.fromTo("#tele", { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.2, ease: "power1.in", immediateRender: false }, KO.t - 0.12);
+
+      // K.O.: slab wipes, letters slam in
+      gsap.set("#ko", { autoAlpha: 0 });
+      tl.set("#ko", { autoAlpha: 1 }, KO.t);
+      tl.fromTo("#ko .bar", { scaleX: 0 }, { scaleX: 1, duration: 0.18, ease: "power3.out" }, KO.t);
+      tl.fromTo("#ko .txt", { scale: 2.2, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.2, ease: "back.out(1.6)", immediateRender: false }, KO.t);
+      FLASHES.forEach((f) => tl.fromTo(f.d, { autoAlpha: 1, scale: 1 }, { autoAlpha: 0, scale: 0.6, duration: 0.14, ease: "power2.in", immediateRender: false }, f.t));
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

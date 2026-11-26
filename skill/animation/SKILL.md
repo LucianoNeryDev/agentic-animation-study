@@ -1,6 +1,6 @@
 ---
 name: animation
-description: "Animation with code: plan, build, check and render animated video or scenes in Blender, Godot, Three.js or Motion Canvas. Use when the user asks for an animation, animated video or motion graphics, and as the base that specialized animation skills extend."
+description: "Animation with code: plan, build, check and render animated video or scenes in Blender, Godot, Three.js, Motion Canvas or HyperFrames. Use when the user asks for an animation, animated video or motion graphics, and as the base that specialized animation skills extend."
 argument-hint: "[what to animate, in as much detail as you have]"
 ---
 
@@ -44,11 +44,12 @@ Skip the route choice when a child skill fixes one. Otherwise pick by what the d
 | Godot | Action and game feel in 2D or 3D: combat choreography, many interacting entities, physics, procedural scenes, anything that may become a game | [routes/godot.md](routes/godot.md) |
 | Three.js | 3D shown on the web or interactive in a browser, or quick stylized 3D renders | [routes/threejs.md](routes/threejs.md) |
 | Motion Canvas | Programmed 2D video: motion graphics, explainers, diagrams, text and data, flat or stick-figure characters | [routes/motion-canvas.md](routes/motion-canvas.md) |
+| HyperFrames | Web-native 2D video: product and UI videos, kinetic type and captions, real footage edited in, broadcast-style overlays; anything best built from HTML and CSS | [routes/hyperframes.md](routes/hyperframes.md) |
 | Blender Grease Pencil | Hand-drawn 2D: ink or sketch lines, line boil, frame-by-frame drawing, 2D drawn into a 3D space | [routes/blender.md](routes/blender.md), Grease Pencil section |
 
-For 2D, the look decides: clean vector graphics → Motion Canvas; game feel (HUD, particles, glow, physics) → Godot 2D; a hand-drawn look → Grease Pencil.
+For 2D, the look decides: clean vector drawing → Motion Canvas; web UI, typography, captions or footage → HyperFrames; game feel (HUD, particles, glow, physics) → Godot 2D; a hand-drawn look → Grease Pencil. When every frame must reproduce byte for byte, prefer Motion Canvas over HyperFrames.
 
-Break a tie in this order: the route an existing project already uses, a route whose tools are already installed, then the faster loop (Motion Canvas and Three.js iterate in seconds; Blender Cycles in minutes).
+Break a tie in this order: the route an existing project already uses, a route whose tools are already installed, then the faster loop (Motion Canvas and Three.js iterate in seconds, HyperFrames in tens of seconds; Blender Cycles in minutes).
 
 Choose the **methods** (keyframed, procedural, physics, IK, imported clips, particles) and the craft rules that apply from [METHODS.md](METHODS.md). Read the chosen route file in full.
 

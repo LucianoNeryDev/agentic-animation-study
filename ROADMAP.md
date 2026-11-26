@@ -2,7 +2,8 @@
 
 Where the study could go next. None of this is scheduled.
 
-- **HyperFrames in the skill.** [docs/09](docs/09-hyperframes.md) recommends HyperFrames as a fifth route for web-native 2D video. Recording that decision means an ADR, a route guide and a smoke test in the `/animation` skill.
+- **HyperFrames at 1.0.** Re-measure render speed and whether its MP4 output becomes byte-exact; test `render --docker` for reproducible renders.
+- **Sound through HyperFrames.** Its audio clips and loudness tools could carry the ElevenLabs voice, effects and music in the HyperFrames route.
 - **Child skills.** Specialised skills that extend `/animation` through its slots, for example a stick-fight series or product explainers, each with a starter project that already passes its route's smoke test.
 - **Sound.** Voice, sound effects and music generated with the ElevenLabs API and timed to the beat sheet, then muxed in the render step.
 - **Shared-choreography tooling.** Turn the bake approach from the Warrior vs Dragon study (`choreo.py` → `bake.json`) into a small reusable library: rigs, keyframe tracks, hit-stop time, chain simulation, and per-route drawing helpers.
